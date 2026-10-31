@@ -71,7 +71,7 @@ mark.kw{background:#ff3b2f;color:#fff;padding:0 3px;border-radius:3px;font-weigh
 .em{font-size:11px;margin-top:3px}.em.ok{color:#7fe07a}.em.err{color:#ff8a80}.em.pend{color:var(--amb)}
 #emBanner{display:none;margin:4px 0;padding:8px;border-radius:8px;background:#ff3b2f;color:#fff;font-weight:800;font-size:12px;text-align:center;cursor:pointer;animation:bl 1.6s infinite;font-family:"Segoe UI",Roboto,sans-serif}
 .em button{background:#ffb43a;color:#1a1000;border:0;border-radius:6px;padding:4px 8px;font-weight:800;font-size:11px;margin-left:4px}
-</style><script src="https://unpkg.com/mqtt@5/dist/mqtt.min.js"></script><script src="https://accounts.google.com/gsi/client" async defer onerror="window.__gisFail=1"></script></head><body>
+</style><script src="https://unpkg.com/mqtt@5/dist/mqtt.min.js"></script><script src="radio/sstv.js"></script><script src="https://accounts.google.com/gsi/client" async defer onerror="window.__gisFail=1"></script></head><body>
 <div class="radio"><div class="ant"></div><div class="knob"></div>
 <div class="body">
 <div class="plate"><div class="brand">BOONDOCK ECHO<small>LIVE RADIO TRANSCRIPTION</small></div><div class="tri"></div><span class="demo">DEMO</span><button class="gear" id="gearBtn" title="Settings" aria-label="Settings">⚙</button></div>
@@ -165,12 +165,13 @@ function renderClip(c){let el=document.getElementById("c"+c.id);const isNew=!el;
  const url=el.dataset.url||URL.createObjectURL(c.audio);el.dataset.url=url;
  el.innerHTML=`<div class="meta"><span>${c.kw&&c.kw.length?'<span class="abadge">⚠ ALERT</span> ':""}${c.speaker?"📻 <b>"+esc(c.speaker)+"</b>"+(mapUrl(c.dev)?" 📍"+esc(c.dev.lbl||c.dev.lat+","+c.dev.lon):"")+" · ":""}🕒 ${esc(fmtT(c.t))} · ${c.dur.toFixed(1)} s${c.lang?" · "+esc(c.lang):""}</span><span><button class="lt" data-a="dl">⬇ Download</button> <button class="lt" data-a="rm">✕</button></span></div>
  <div class="tx">${c.text?hl(c.text):'<i style="color:#888">'+esc(c.status||"Transcribing…")+'</i>'}${c.drive?'<span class="dck" title="Saved to Google Drive">✓☁</span>':""}</div>${c.trans?`<div class="tr">↳ ${hl(c.trans)} <small>(${esc(c.dst)})</small></div>`:""}${c.kw&&c.kw.length?`<div class="em pend">📟 ${esc(c.dev?.id||"—")}${mapUrl(c.dev)?` · 📍 ${esc(c.dev.lat)}, ${esc(c.dev.lon)}${c.dev.lbl?" ("+esc(c.dev.lbl)+")":""} · <a href="${esc(mapUrl(c.dev))}" target="_blank" rel="noopener" style="color:var(--lcdt)">Google Maps</a>`:" · no location"}</div>`:""}${c.em?`<div class="em ${c.em.st}">✉ ${esc(c.em.msg)}${c.emPending&&!gTokOK()?' <button data-a="gc">Connect Google &amp; send</button>':""}${c.em.hint?`<br><small>💡 ${esc(c.em.hint)}</small>`:""}</div>`:""}<audio controls src="${url}"></audio>`;
+ if(c.img){const u=el.dataset.img||URL.createObjectURL(c.img);el.dataset.img=u;const tx=el.querySelector(".tx");if(tx)tx.insertAdjacentHTML("afterend",`<a href="${u}" download="sstv_${stamp(c.t)}.png"><img src="${u}" alt="SSTV image" style="width:100%;max-width:320px;display:block;border-radius:6px;margin-top:6px"></a>`);}
  el.querySelector('[data-a=dl]').onclick=()=>dlClip(c);const gcb=el.querySelector('[data-a=gc]');if(gcb)gcb.onclick=googleConnect;el.querySelector('[data-a=rm]').onclick=async()=>{await del(c.id);URL.revokeObjectURL(url);el.remove();count();};count();}
 async function count(){const n=(await getAll()).length;$("cnt").textContent=n+" clip(s) stored";}
 function saveBlob(b,name){const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}
 const stamp=t=>new Date(t).toISOString().replace(/[:.]/g,"-").slice(0,19);
 function clipTxt(c){return `[${fmtT(c.t)}] (${c.dur.toFixed(1)}s)\n${c.text||""}\n${c.trans?"Translation ("+c.dst+"): "+c.trans+"\n":""}`;}
-async function dlClip(c){const enc=new TextEncoder();saveBlob(await zip([{name:`clip_${stamp(c.t)}.wav`,data:new Uint8Array(await c.audio.arrayBuffer())},{name:`clip_${stamp(c.t)}.txt`,data:enc.encode(clipTxt(c))}]),`boondock_clip_${stamp(c.t)}.zip`);}
+async function dlClip(c){const enc=new TextEncoder();saveBlob(await zip([{name:`clip_${stamp(c.t)}.wav`,data:new Uint8Array(await c.audio.arrayBuffer())},{name:`clip_${stamp(c.t)}.txt`,data:enc.encode(clipTxt(c))}].concat(c.img?[{name:`clip_${stamp(c.t)}.png`,data:new Uint8Array(await c.img.arrayBuffer())}]:[])),`boondock_clip_${stamp(c.t)}.zip`);}
 $("dlAll").onclick=async()=>{const cs=(await getAll()).sort((a,b)=>a.t-b.t);if(!cs.length)return alert("No clips stored.");const enc=new TextEncoder();
  const csvq=s=>'"'+String(s??"").replace(/"/g,'""')+'"';
  const csv="\ufefftimestamp,duration_s,language,transcript,translation_lang,translation,audio_file\n"+cs.map(c=>[new Date(c.t).toISOString(),c.dur.toFixed(1),c.lang||"",c.text||"",c.dst||"",c.trans||"",`audio/clip_${stamp(c.t)}.wav`].map(csvq).join(",")).join("\n");
@@ -256,7 +257,7 @@ $("startBtn").onclick=()=>$("inSrc").value==="ptt"?pttStart():start();$("stopBtn
 const PTT_PREFIX="ptt-radio-66ab9178/",PTT_BROKERS=["wss://public:public@public.cloud.shiftr.io","wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt","wss://test.mosquitto.org:8081"],PTT_RATE=12000;
 const RADIO_DEF=new URL("radio/",location.href).href;
 function pttShareUI(){const u=$("pttUrl").value.trim()||RADIO_DEF,ch=pttChan(u),link=ch==="virtual"?u:u;$("pttShare").innerHTML=`Channel <b>${esc(ch)}</b> · share/open radio: <a href="${esc(link)}" target="_blank" rel="noopener" style="color:var(--lcdt)">${esc(link)}</a>`;}
-let pttOn=false,pttC=null,pttId="",pttCh="virtual",pttUsers={},pttFloor=null,pttTimer=null,pttBi=0,pttClip=null;window.__pttStats={chunks:0,clips:0};
+let pttSstv={};window.__sstvStats={images:0};let pttOn=false,pttC=null,pttId="",pttCh="virtual",pttUsers={},pttFloor=null,pttTimer=null,pttBi=0,pttClip=null;window.__pttStats={chunks:0,clips:0};
 $("inSrc").value=localStorage.getItem("be_in")||"mic";$("pttUrl").value=localStorage.getItem("be_ptt")||RADIO_DEF;
 function inUI(){const p=$("inSrc").value==="ptt";$("pttWrap").style.display=$("pttShare").style.display=p?"":"none";if(p)pttShareUI();}$("pttUrl").oninput=pttShareUI;$("inSrc").onchange=()=>{localStorage.setItem("be_in",$("inSrc").value);inUI();};inUI();
 function pttChan(u){try{const x=new URL(u);return(x.searchParams.get("ch")||new URLSearchParams(x.hash.slice(1)).get("ch")||"virtual").replace(/[^\w-]/g,"")||"virtual";}catch(e){return"virtual";}}
@@ -265,20 +266,30 @@ function pttStat(m){$("pttSt").textContent="📻 "+m;}
 function pttBeat(){if(pttC&&pttC.connected)pttC.publish(pttT("presence/"+pttId),JSON.stringify({id:pttId,name:"BoondockEcho",ts:Date.now()}),{retain:true});}
 function pttConnect(){const url=PTT_BROKERS[pttBi%PTT_BROKERS.length];let ok=false;
  const c=pttC=mqtt.connect(url,{clientId:"ptt_"+pttId+"_"+Date.now()%1e6,clean:true,keepalive:20,reconnectPeriod:0,connectTimeout:8000,will:{topic:pttT("presence/"+pttId),payload:"",retain:true,qos:0}});
- c.on("connect",()=>{ok=true;c.subscribe([pttT("presence/+"),pttT("floor"),pttT("audio")]);pttBeat();pttStat("Monitoring channel '"+pttCh+"' as BoondockEcho (listen-only) · "+url.replace(/\/\/.*@/,"//"));setStatus("📻 Listening to PTT channel <b>"+esc(pttCh)+"</b> — each transmission is transcribed.");});
+ c.on("connect",()=>{ok=true;c.subscribe([pttT("presence/+"),pttT("floor"),pttT("audio"),pttT("sstv")]);pttBeat();pttStat("Monitoring channel '"+pttCh+"' as BoondockEcho (listen-only) · "+url.replace(/\/\/.*@/,"//"));setStatus("📻 Listening to PTT channel <b>"+esc(pttCh)+"</b> — each transmission is transcribed.");});
  c.on("message",pttMsg);c.on("error",()=>{});
  c.on("close",()=>{if(!pttOn||c!==pttC)return;pttStat("disconnected — retrying…");if(!ok)pttBi++;setTimeout(()=>{c.end(true);if(pttOn)pttConnect();},ok?1500:300);});}
 function pttEnd(){const k=pttClip;pttClip=null;if(!k||!k.len)return;const dur=k.len/PTT_RATE;if(dur<0.4){setStatus("Short PTT burst ignored.");return;}
  const u=pttUsers[k.id]||{},l=u.loc,dev={id:"PTT:"+k.name,lat:l?l.lat:"",lon:l?l.lon:"",lbl:l?(l.city||"")+(l.src==="ip"?" (approx.)":""):""};
+ const meta=pttSstv[k.id]&&Date.now()-pttSstv[k.id].ts<180000?pttSstv[k.id]:null;
+ if((k.rx&&k.rx.started)||meta){delete pttSstv[k.id];sstvClip(k,meta,dev);return;}
  window.__pttStats.clips++;setStatus(`📻 PTT transmission from <b>${esc(k.name)}</b> (${dur.toFixed(1)} s) — transcribing…`);processClip(k.chunks,PTT_RATE,k.t,{src:"ptt",speaker:k.name,dev});}
+async function sstvClip(k,meta,dev){const W=320,H=240,cv=document.createElement("canvas");cv.width=W;cv.height=H;const g=cv.getContext("2d");let how;
+ if(k.rx&&k.rx.done){g.putImageData(new ImageData(k.rx.rgba,W,H),0,0);how="decoded from SSTV audio (Robot36)";}
+ else if(meta&&meta.jpeg){await new Promise(res=>{const im=new Image();im.onload=()=>{g.drawImage(im,0,0,W,H);res();};im.onerror=res;im.src=meta.jpeg;});how=k.rx&&k.rx.started?`audio decode incomplete (${Math.round(k.rx.progress()*100)}%) — clean copy`:"clean copy (no SSTV audio decoded)";}
+ else{g.putImageData(new ImageData(k.rx.rgba,W,H),0,0);how=`partial SSTV image (${Math.round(k.rx.progress()*100)}%)`;}
+ const img=await new Promise(r=>cv.toBlob(r,"image/png"));const dur=k.len/PTT_RATE;
+ const c={id:k.t+"_"+Math.random().toString(36).slice(2,6),t:k.t,session:sessionId,dur,audio:toWav(k.chunks,PTT_RATE),img,text:"📷 SSTV image from "+k.name+" — "+how,trans:"",dst:"",dev,src:"sstv",speaker:k.name,kw:[],status:""};
+ window.__beLast=c;window.__sstvStats.images++;window.__sstvStats.how=how;await put(c);renderClip(c);driveEnqueue(c);setStatus(`📷 SSTV image received from <b>${esc(k.name)}</b> (${esc(how)}) — not sent to transcription.`);}
 function pttMsg(t,p){const now=Date.now(),s=t.slice(PTT_PREFIX.length+pttCh.length+1);
  if(s.startsWith("presence/")){const id=s.slice(9);if(!p.length)delete pttUsers[id];else try{const m=JSON.parse(p.toString());if(now-m.ts<60000)pttUsers[id]={name:String(m.name).slice(0,40),seen:now,loc:m.loc&&isFinite(+m.loc.lat)&&isFinite(+m.loc.lon)?m.loc:null};}catch(e){}return;}
+ if(s==="sstv"){try{const m=JSON.parse(p.toString());if(m&&m.id)pttSstv[m.id]=m;}catch(e){}return;}
  if(s==="floor"){let m;try{m=JSON.parse(p.toString());}catch(e){return;}
   if(m.t==="claim"||m.t==="hb"){if(!pttFloor||pttFloor.id!==m.id){if(pttClip)pttEnd();pttFloor={id:m.id,name:String(m.name||"?").slice(0,40)};}pttFloor.seen=now;if(pttUsers[m.id])pttUsers[m.id].seen=now;}
   else if(m.t==="release"&&pttFloor&&pttFloor.id===m.id){pttFloor=null;pttEnd();}return;}
  if(s==="audio"){const b=new Uint8Array(p),n=b[0];let id="";for(let i=1;i<=n;i++)id+=String.fromCharCode(b[i]);if(!pttFloor||pttFloor.id!==id||id===pttId)return;pttFloor.seen=now;
   const pcm=b.slice(1+n),i16=new Int16Array(pcm.buffer,0,pcm.length>>1),f=new Float32Array(i16.length);for(let i=0;i<i16.length;i++)f[i]=i16[i]/32768;
-  if(!pttClip)pttClip={id,name:pttFloor.name,t:now,chunks:[],len:0};pttClip.chunks.push(f);pttClip.len+=f.length;window.__pttStats.chunks++;lastDb=rmsDb(f);
+  if(!pttClip)pttClip={id,name:pttFloor.name,t:now,chunks:[],len:0,rx:window.SSTV?new SSTV.Rx(PTT_RATE):null};if(pttClip.rx)try{pttClip.rx.push(i16);}catch(e){}pttClip.chunks.push(f);pttClip.len+=f.length;window.__pttStats.chunks++;lastDb=rmsDb(f);
   if(pttClip.len>=60*PTT_RATE)pttEnd();}}
 function pttTick(){const now=Date.now();for(const k in pttUsers)if(now-pttUsers[k].seen>15000)delete pttUsers[k];
  if(pttFloor&&now-pttFloor.seen>2500){pttFloor=null;pttEnd();}if(!pttClip&&!pttFloor)lastDb=-120;}
@@ -339,6 +350,7 @@ const csvq=s=>'"'+String(s??"").replace(/"/g,'""')+'"';
 async function gdOne(c){const d=new Date(c.t),day=ymd(d),sess=c.session||("S-"+day.replace(/-/g,"")+"-000000-none"),base=`${day}_${hms(d)}_${sess}`;
  const root=await gdFolder("Boondock Echo"),df=await gdFolder(day,root),sf=await gdFolder(sess,df);
  if(!c.driveWav){c.driveWav=await gdUpload(base+".wav",sf,c.audio,"audio/wav");await put(c);}
+ if(c.img&&!c.driveImg){c.driveImg=await gdUpload(base+".png",sf,c.img,"image/png");await put(c);}
  const txt=`Timestamp: ${d.toLocaleString("en-IN",{timeZone:"Asia/Kolkata"})} IST (${d.toISOString()})\nSession ID: ${sess}\nDevice ID: ${(c.dev||{}).id||""}\nLocation: ${devLoc(c.dev||{})}\nGoogle Maps: ${mapUrl(c.dev||{})}\nKeywords: ${(c.kw||[]).join(", ")}\nDuration: ${c.dur.toFixed(1)} s\nSource language: ${c.lang||$("src").value||"auto"}\nTranscript: ${c.text||c.status||""}\nTranslation${c.dst?" ("+c.dst+")":""}: ${c.trans||""}\n`;
  await gdUpload(base+".txt",sf,new Blob([txt],{type:"text/plain"}),"text/plain");
  // session.csv: rebuild from all local clips of this session, create or PATCH
