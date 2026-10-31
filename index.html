@@ -84,10 +84,10 @@ mark.kw{background:#ff3b2f;color:#fff;padding:0 3px;border-radius:3px;font-weigh
 </div>
 <div class="grille"></div>
 <div class="keys">
- <div class="row" id="inRow" style="gap:6px;margin-bottom:8px;flex-wrap:wrap"><label class="sel">INPUT<select id="inSrc"><option value="mic">🎙 Mic</option><option value="ptt">📻 PTT Radio link</option></select></label><label class="sel" id="pttWrap" style="flex:2">PTT LINK<input id="pttUrl" placeholder="https://vibhvesh.github.io/ptt-radio/"></label><div id="pttSt" style="width:100%;font-size:12px;opacity:.8"></div></div>
+ <div class="row" id="inRow" style="gap:6px;margin-bottom:8px;flex-wrap:wrap"><label class="sel">INPUT<select id="inSrc"><option value="mic">🎙 Mic</option><option value="ptt">📻 Web page / PTT radio</option></select></label><label class="sel" id="pttWrap" style="flex:2">PTT LINK<input id="pttUrl" placeholder="radio link"></label><div id="pttShare" style="width:100%;font-size:12px"></div><div id="pttSt" style="width:100%;font-size:12px;opacity:.8"></div></div>
  <div class="ptt"><button id="startBtn">▶ START</button><button id="stopBtn" disabled>■ STOP</button></div>
 </div>
-<div class="one"><a href="https://vibhvesh.github.io/ptt-radio/" target="_blank" style="color:inherit">📻 Open PTT Radio</a> · DEMO · Temporary data, auto-deleted after 7 days · ⚙ Settings for key, languages, Drive &amp; alerts</div>
+<div class="one"><a href="radio/" target="_blank" style="color:inherit">📻 Open PTT Radio</a> · DEMO · Temporary data, auto-deleted after 7 days · ⚙ Settings for key, languages, Drive &amp; alerts</div>
 </div></div>
 <div class="modal" id="setModal"><div class="panel"><div class="ph"><span>⚙ SETTINGS</span><button class="gear" id="setClose" aria-label="Close">✕</button></div><div class="dw">
  <div class="row"><label class="sel">SOURCE<select id="src"></select></label><label class="sel">TRANSLATE<select id="dst"></select></label></div>
@@ -254,9 +254,11 @@ function stop(){if(mode==="rec")endClip();running=false;mode="idle";try{node.dis
 $("startBtn").onclick=()=>$("inSrc").value==="ptt"?pttStart():start();$("stopBtn").onclick=()=>pttOn?pttStop():stop();if(0)$("stopBtn").onclick=stop;$("recalBtn").onclick=()=>{if(mode==="rec")endClip();startCal();};
 /* ---------- PTT Radio link input (listen-only monitor) ---------- */
 const PTT_PREFIX="ptt-radio-66ab9178/",PTT_BROKERS=["wss://public:public@public.cloud.shiftr.io","wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt","wss://test.mosquitto.org:8081"],PTT_RATE=12000;
+const RADIO_DEF=new URL("radio/",location.href).href;
+function pttShareUI(){const u=$("pttUrl").value.trim()||RADIO_DEF,ch=pttChan(u),link=ch==="virtual"?u:u;$("pttShare").innerHTML=`Channel <b>${esc(ch)}</b> · share/open radio: <a href="${esc(link)}" target="_blank" rel="noopener" style="color:var(--lcdt)">${esc(link)}</a>`;}
 let pttOn=false,pttC=null,pttId="",pttCh="virtual",pttUsers={},pttFloor=null,pttTimer=null,pttBi=0,pttClip=null;window.__pttStats={chunks:0,clips:0};
-$("inSrc").value=localStorage.getItem("be_in")||"mic";$("pttUrl").value=localStorage.getItem("be_ptt")||"https://vibhvesh.github.io/ptt-radio/";
-function inUI(){$("pttWrap").style.display=$("inSrc").value==="ptt"?"":"none";}$("inSrc").onchange=()=>{localStorage.setItem("be_in",$("inSrc").value);inUI();};inUI();
+$("inSrc").value=localStorage.getItem("be_in")||"mic";$("pttUrl").value=localStorage.getItem("be_ptt")||RADIO_DEF;
+function inUI(){const p=$("inSrc").value==="ptt";$("pttWrap").style.display=$("pttShare").style.display=p?"":"none";if(p)pttShareUI();}$("pttUrl").oninput=pttShareUI;$("inSrc").onchange=()=>{localStorage.setItem("be_in",$("inSrc").value);inUI();};inUI();
 function pttChan(u){try{const x=new URL(u);return(x.searchParams.get("ch")||new URLSearchParams(x.hash.slice(1)).get("ch")||"virtual").replace(/[^\w-]/g,"")||"virtual";}catch(e){return"virtual";}}
 function pttT(s){return PTT_PREFIX+pttCh+"/"+s;}
 function pttStat(m){$("pttSt").textContent="📻 "+m;}
@@ -283,7 +285,7 @@ function pttTick(){const now=Date.now();for(const k in pttUsers)if(now-pttUsers[
 async function pttStart(){if(!window.mqtt){alert("MQTT library failed to load — check internet.");return;}
  if(!(localStorage.getItem("be_key")||$("key").value.trim())){alert("Please enter and save your ElevenLabs API key in Settings first.");return;}
  if($("key").value.trim())localStorage.setItem("be_key",$("key").value.trim());
- const u=$("pttUrl").value.trim()||"https://vibhvesh.github.io/ptt-radio/";localStorage.setItem("be_ptt",u);pttCh=pttChan(u);
+ const u=$("pttUrl").value.trim()||RADIO_DEF;localStorage.setItem("be_ptt",u);pttCh=pttChan(u);
  newSession();pttId=Math.random().toString(36).slice(2,10);pttUsers={};pttFloor=null;pttClip=null;pttOn=true;running=true;pttConnect();
  let last=0;pttTimer=setInterval(()=>{const n=Date.now();if(n-last>=5000){last=n;pttBeat();}pttTick();},1000);
  $("startBtn").disabled=true;$("stopBtn").disabled=false;$("inSrc").disabled=true;pttStat("connecting…");draw();}
