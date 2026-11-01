@@ -85,6 +85,7 @@ mark.kw{background:#ff3b2f;color:#fff;padding:0 3px;border-radius:3px;font-weigh
 <div class="grille"></div>
 <div class="keys">
  <div class="row" id="inRow" style="gap:6px;margin-bottom:8px;flex-wrap:wrap"><label class="sel">INPUT<select id="inSrc"><option value="mic">🎙 Mic</option><option value="ptt">📻 Web page / PTT radio</option></select></label><label class="sel" id="pttWrap" style="flex:2">PTT LINK<input id="pttUrl" placeholder="radio link"></label><div id="pttShare" style="width:100%;font-size:12px"></div><div id="pttSt" style="width:100%;font-size:12px;opacity:.8"></div></div>
+ <div class="row" style="gap:6px;margin-bottom:8px"><label class="sel">TRANSCRIPTION ENGINE<select id="engine"><option value="free">🆓 Free (in-browser Whisper)</option><option value="eleven">ElevenLabs (API key)</option></select></label><div id="engSt" style="width:100%;font-size:12px;opacity:.8"></div></div>
  <div class="ptt"><button id="startBtn">▶ START</button><button id="stopBtn" disabled>■ STOP</button></div>
 </div>
 <div class="one"><a href="radio/" target="_blank" style="color:inherit">📻 Open PTT Radio</a> · DEMO · Temporary data, auto-deleted after 7 days · ⚙ Settings for key, languages, Drive &amp; alerts</div>
@@ -119,7 +120,7 @@ mark.kw{background:#ff3b2f;color:#fff;padding:0 3px;border-radius:3px;font-weigh
  <div style="font-size:10px">Sent from your own Gmail via "Connect Google" above (Drive + Gmail send permission). Failed emails are retried once.</div></div>
  <div class="note d"><b>Demo only</b> — not for official or commercial use.</div>
  <div class="note"><b>Data notice:</b> Your data is temporary and stored only in this browser. Download your data yourself; anything older than 7 days is deleted automatically.</div>
- <div class="foot">Audio clips are sent to ElevenLabs (speech-to-text) and text to Google Translate (fallback MyMemory) for processing. Boondock Echo DEMO · Not an official government website.</div>
+ <div class="foot">Audio clips are transcribed on-device (free Whisper) or sent to ElevenLabs if selected, and text to Google Translate (fallback MyMemory) for processing. Boondock Echo DEMO · Not an official government website.</div>
 </div></div></div>
 <div id="gWarn" role="status" style="display:none;position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:9999;max-width:92vw;background:#ffd84a;color:#2a2200;border:2px solid #b38f00;border-radius:8px;padding:8px 34px 8px 12px;font:13px/1.35 system-ui,sans-serif;box-shadow:0 4px 14px #0006"><span id="gWarnT"></span><button id="gWarnX" aria-label="Dismiss" style="position:absolute;right:6px;top:4px;background:none;border:0;font-size:18px;cursor:pointer;color:#2a2200">×</button></div>
 <script>
@@ -202,7 +203,15 @@ function toWav(chunks,inRate,outRate=16000){let len=chunks.reduce((a,c)=>a+c.len
  return new Blob([b.buffer,pcm.buffer],{type:"audio/wav"});}
 
 /* ---------- STT + translate ---------- */
-async function stt(blob){const key=localStorage.getItem("be_key")||$("key").value.trim();if(!key)throw new Error("No API key — add it in Settings.");
+const WHISPER_MODEL="onnx-community/whisper-base";let asrP=null;
+function engine(){return $("engine").value;}
+function engSt(t){const e=$("engSt");if(e)e.textContent=t;}
+function loadAsr(){if(asrP)return asrP;const t0=performance.now();let seen={};engSt("⏳ Loading free Whisper model (first time ~80 MB, cached after)…");
+ asrP=import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.5").then(T=>T.pipeline("automatic-speech-recognition",WHISPER_MODEL,{dtype:"q8",progress_callback:p=>{if(p.status==="progress"&&p.total){seen[p.file]=[p.loaded,p.total];let a=0,b=0;for(const k in seen){a+=seen[k][0];b+=seen[k][1];}engSt(`⏳ Loading Whisper model… ${(a/1e6).toFixed(1)} / ${(b/1e6).toFixed(1)} MB`);}}})).then(p=>{const s=((performance.now()-t0)/1000).toFixed(1);window.__asrLoad={sec:+s,files:seen};engSt(`✅ Free Whisper (${WHISPER_MODEL.split("/")[1]}) ready — loaded in ${s}s. Runs on this device.`);return p;}).catch(e=>{asrP=null;engSt("❌ Model load failed: "+e.message);throw e;});return asrP;}
+async function sttFree(blob){const asr=await loadAsr();const buf=await blob.arrayBuffer();const pcm=new Int16Array(buf,44,(buf.byteLength-44)>>1);const f=new Float32Array(pcm.length);for(let i=0;i<pcm.length;i++)f[i]=pcm[i]/32768;
+ const lc=$("src").value;const LN={hi:"hindi",en:"english"};const o={chunk_length_s:30,stride_length_s:5,task:"transcribe"};if(LN[lc]||lc)o.language=LN[lc]||lc;
+ let r;try{r=await asr(f,o);}catch(e){delete o.language;r=await asr(f,o);}return{text:(r.text||"").trim(),lang:lc||""};}
+async function stt(blob){if(engine()==="free")return sttFree(blob);const key=localStorage.getItem("be_key")||$("key").value.trim();if(!key)throw new Error("No API key — add it in Settings.");
  let last;for(const model of ["scribe_v2","scribe_v1"]){const fd=new FormData();fd.append("file",blob,"clip.wav");fd.append("model_id",model);const lc=$("src").value;if(lc)fd.append("language_code",lc);
   try{const r=await fetch("https://api.elevenlabs.io/v1/speech-to-text",{method:"POST",headers:{"xi-api-key":key},body:fd});
    if(r.ok){const j=await r.json();return{text:(j.text||"").trim(),lang:j.language_code||lc};}
@@ -239,7 +248,7 @@ function endClip(){const rate=ctx.sampleRate;const dur=clipLen/rate;const c=clip
  if(dur<0.7){setStatus("Short burst ignored (&lt;0.7 s). Listening…");return;}
  setStatus(`Clip captured (${dur.toFixed(1)} s) — sending for transcription. Listening…`);processClip(c,rate,t);}
 const WK=`class P extends AudioWorkletProcessor{constructor(){super();this.b=new Float32Array(2048);this.n=0}process(i){const c=i[0]&&i[0][0];if(c){for(let k=0;k<c.length;k++){this.b[this.n++]=c[k];if(this.n===2048){this.port.postMessage(this.b.slice(0));this.n=0}}}return true}}registerProcessor('be-cap',P);`;
-async function start(){if(!(localStorage.getItem("be_key")||$("key").value.trim())){alert("Please enter and save your ElevenLabs API key in Settings first.");return;}
+async function start(){if(engine()==="eleven"&&!(localStorage.getItem("be_key")||$("key").value.trim())){alert("Please enter and save your ElevenLabs API key in Settings first.");return;}
  if($("key").value.trim())localStorage.setItem("be_key",$("key").value.trim());
  newSession();
  try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});}catch(e){alert("Microphone access failed: "+e.message+"\nTip: allow mic access; in Chrome use http://localhost or file:// with permission.");return;}
@@ -252,7 +261,8 @@ async function start(){if(!(localStorage.getItem("be_key")||$("key").value.trim(
  src.connect(node);node.connect(mute);running=true;$("startBtn").disabled=true;$("stopBtn").disabled=false;$("recalBtn").disabled=false;startCal();draw();}
 function stop(){if(mode==="rec")endClip();running=false;mode="idle";try{node.disconnect();src.disconnect();}catch(e){}stream&&stream.getTracks().forEach(t=>t.stop());ctx&&ctx.close();
  $("startBtn").disabled=false;$("stopBtn").disabled=true;$("recalBtn").disabled=true;$("prog").style.display="none";setStatus("Stopped.");}
-$("startBtn").onclick=()=>$("inSrc").value==="ptt"?pttStart():start();$("stopBtn").onclick=()=>pttOn?pttStop():stop();if(0)$("stopBtn").onclick=stop;$("recalBtn").onclick=()=>{if(mode==="rec")endClip();startCal();};
+$("engine").value=localStorage.getItem("be_engine")||"free";$("engine").onchange=()=>{localStorage.setItem("be_engine",engine());if(engine()==="free")loadAsr().catch(()=>{});else engSt("ElevenLabs cloud STT — needs API key in Settings.");};engSt(engine()==="free"?"Free Whisper loads on START (cached after first use).":"ElevenLabs cloud STT — needs API key in Settings.");
+$("startBtn").addEventListener("click",()=>{if(engine()==="free")loadAsr().catch(()=>{});});$("startBtn").onclick=()=>$("inSrc").value==="ptt"?pttStart():start();$("stopBtn").onclick=()=>pttOn?pttStop():stop();if(0)$("stopBtn").onclick=stop;$("recalBtn").onclick=()=>{if(mode==="rec")endClip();startCal();};
 /* ---------- PTT Radio link input (listen-only monitor) ---------- */
 const PTT_PREFIX="ptt-radio-66ab9178/",PTT_BROKERS=["wss://public:public@public.cloud.shiftr.io","wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt","wss://test.mosquitto.org:8081"],PTT_RATE=12000;
 const RADIO_DEF=new URL("radio/",location.href).href;
@@ -294,7 +304,7 @@ function pttMsg(t,p){const now=Date.now(),s=t.slice(PTT_PREFIX.length+pttCh.leng
 function pttTick(){const now=Date.now();for(const k in pttUsers)if(now-pttUsers[k].seen>15000)delete pttUsers[k];
  if(pttFloor&&now-pttFloor.seen>2500){pttFloor=null;pttEnd();}if(!pttClip&&!pttFloor)lastDb=-120;}
 async function pttStart(){if(!window.mqtt){alert("MQTT library failed to load — check internet.");return;}
- if(!(localStorage.getItem("be_key")||$("key").value.trim())){alert("Please enter and save your ElevenLabs API key in Settings first.");return;}
+ if(engine()==="eleven"&&!(localStorage.getItem("be_key")||$("key").value.trim())){alert("Please enter and save your ElevenLabs API key in Settings first.");return;}
  if($("key").value.trim())localStorage.setItem("be_key",$("key").value.trim());
  const u=$("pttUrl").value.trim()||RADIO_DEF;localStorage.setItem("be_ptt",u);pttCh=pttChan(u);
  newSession();pttId=Math.random().toString(36).slice(2,10);pttUsers={};pttFloor=null;pttClip=null;pttOn=true;running=true;pttConnect();
