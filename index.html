@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#16181b"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Echo DEMO">
-<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Boondock%20Echo%20DEMO%22%2C%22short_name%22%3A%22Echo%20DEMO%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%2316181b%22%2C%22theme_color%22%3A%22%2316181b%22%2C%22start_url%22%3A%22.%22%7D">
-<title>Boondock Echo — Live Radio Transcription — DEMO</title>
+<meta name="theme-color" content="#16181b"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="GPT Transcription">
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22GPT%20Transcription%22%2C%22short_name%22%3A%22GPT%20Transcription%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%2316181b%22%2C%22theme_color%22%3A%22%2316181b%22%2C%22start_url%22%3A%22.%22%7D">
+<title>GPT Transcription — Canberra Vision AI Systems</title>
 <style>
 :root{--amb:#ffb43a;--lcd:#1d2a14;--lcdt:#c8f56a;--saff:#ff9933;--grn:#138808}
 *{box-sizing:border-box}html,body{height:100%}
@@ -74,7 +74,7 @@ mark.kw{background:#ff3b2f;color:#fff;padding:0 3px;border-radius:3px;font-weigh
 </style><script src="https://unpkg.com/mqtt@5/dist/mqtt.min.js"></script><script src="radio/sstv.js"></script><script src="https://accounts.google.com/gsi/client" async defer onerror="window.__gisFail=1"></script></head><body>
 <div class="radio"><div class="ant"></div><div class="knob"></div>
 <div class="body">
-<div class="plate"><div class="brand">BOONDOCK ECHO<small>LIVE RADIO TRANSCRIPTION</small></div><div class="tri"></div><span class="demo">DEMO</span><button class="gear" id="gearBtn" title="Settings" aria-label="Settings">⚙</button></div>
+<div class="plate"><div class="brand">GPT TRANSCRIPTION<small>BY CANBERRA VISION AI SYSTEMS</small></div><div class="tri"></div><span class="demo">DEMO</span><button class="gear" id="gearBtn" title="Settings" aria-label="Settings">⚙</button></div>
 <div class="lcd">
  <div class="strip"><canvas id="meter" width="900" height="56"></canvas><div class="prog" id="prog"><div></div></div><div id="status">Idle. Enter your API key in Settings, then press Start.</div></div>
  <div class="lh"><span>◂ RX LOG · NEWEST FIRST</span><span><span id="devLine" style="font-size:10px"></span> <span id="sess">SESSION —</span> <span id="cnt"></span><span id="drv" class="drv off" title="Google Drive">DRIVE</span></span></div>
@@ -120,7 +120,7 @@ mark.kw{background:#ff3b2f;color:#fff;padding:0 3px;border-radius:3px;font-weigh
  <div style="font-size:10px">Sent from your own Gmail via "Connect Google" above (Drive + Gmail send permission). Failed emails are retried once.</div></div>
  <div class="note d"><b>Demo only</b> — not for official or commercial use.</div>
  <div class="note"><b>Data notice:</b> Your data is temporary and stored only in this browser. Download your data yourself; anything older than 7 days is deleted automatically.</div>
- <div class="foot">Audio clips are transcribed on-device (free Whisper) or sent to ElevenLabs if selected, and text to Google Translate (fallback MyMemory) for processing. Boondock Echo DEMO · Not an official government website.</div>
+ <div class="foot">Audio clips are transcribed on-device (free Whisper) or sent to ElevenLabs if selected, and text to Google Translate (fallback MyMemory) for processing. GPT Transcription by Canberra Vision AI Systems · Not an official government website.</div>
 </div></div></div>
 <div id="gWarn" role="status" style="display:none;position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:9999;max-width:92vw;background:#ffd84a;color:#2a2200;border:2px solid #b38f00;border-radius:8px;padding:8px 34px 8px 12px;font:13px/1.35 system-ui,sans-serif;box-shadow:0 4px 14px #0006"><span id="gWarnT"></span><button id="gWarnX" aria-label="Dismiss" style="position:absolute;right:6px;top:4px;background:none;border:0;font-size:18px;cursor:pointer;color:#2a2200">×</button></div>
 <script>
