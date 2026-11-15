@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#16181b"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="GPT Transcription">
+<meta name="theme-color" content="#16181b"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Sanket Transcription">
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22GPT%20Transcription%22%2C%22short_name%22%3A%22GPT%20Transcription%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%2316181b%22%2C%22theme_color%22%3A%22%2316181b%22%2C%22start_url%22%3A%22.%22%7D">
-<title>GPT Transcription — Canberra Vision AI Systems</title>
+<title>Sanket Transcription — Canberra Vision AI Systems</title>
 <style>
 :root{--amb:#ffb43a;--lcd:#1d2a14;--lcdt:#c8f56a;--saff:#ff9933;--grn:#138808}
 *{box-sizing:border-box}html,body{height:100%}
@@ -74,7 +74,7 @@ mark.kw{background:#ff3b2f;color:#fff;padding:0 3px;border-radius:3px;font-weigh
 \n/* Embedded Sanket demo: hide manual radio URL/source controls and standalone radio link */\nbody.ptt-embedded #inRow,body.ptt-embedded .one{display:none!important}\nbody.ptt-embedded .radio{padding-top:28px}\n</style><script src="https://unpkg.com/mqtt@5/dist/mqtt.min.js"></script><script src="radio/sstv.js"></script><script src="https://accounts.google.com/gsi/client" async defer onerror="window.__gisFail=1"></script></head><body>
 <div class="radio"><div class="ant"></div><div class="knob"></div>
 <div class="body">
-<div class="plate"><div class="brand">GPT TRANSCRIPTION<small>BY CANBERRA VISION AI SYSTEMS</small></div><div class="tri"></div><span class="demo">DEMO</span><button class="gear" id="gearBtn" title="Settings" aria-label="Settings">⚙</button></div>
+<div class="plate"><div class="brand">SANKET TRANSCRIPTION<small>BY CANBERRA VISION AI SYSTEMS</small></div><div class="tri"></div><span class="demo">DEMO</span><button class="gear" id="gearBtn" title="Settings" aria-label="Settings">⚙</button></div>
 <div class="lcd">
  <div class="strip"><canvas id="meter" width="900" height="56"></canvas><div class="prog" id="prog"><div></div></div><div id="status">Idle. Enter your API key in Settings, then press Start.</div></div>
  <div class="lh"><span>◂ RX LOG · NEWEST FIRST</span><span><span id="devLine" style="font-size:10px"></span> <span id="sess">SESSION —</span> <span id="cnt"></span><span id="drv" class="drv off" title="Google Drive">DRIVE</span></span></div>
@@ -120,7 +120,7 @@ mark.kw{background:#ff3b2f;color:#fff;padding:0 3px;border-radius:3px;font-weigh
  <div style="font-size:10px">Sent from your own Gmail via "Connect Google" above (Drive + Gmail send permission). Failed emails are retried once.</div></div>
  <div class="note d"><b>Demo only</b> — not for official or commercial use.</div>
  <div class="note"><b>Data notice:</b> Your data is temporary and stored only in this browser. Download your data yourself; anything older than 7 days is deleted automatically.</div>
- <div class="foot">Audio clips are transcribed on-device (free Whisper) or sent to ElevenLabs if selected, and text to Google Translate (fallback MyMemory) for processing. GPT Transcription by Canberra Vision AI Systems · Not an official government website.</div>
+ <div class="foot">Audio clips are transcribed on-device (free Whisper) or sent to ElevenLabs if selected, and text to Google Translate (fallback MyMemory) for processing. Sanket Transcription by Canberra Vision AI Systems · Not an official government website.</div>
 </div></div></div>
 <div id="gWarn" role="status" style="display:none;position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:9999;max-width:92vw;background:#ffd84a;color:#2a2200;border:2px solid #b38f00;border-radius:8px;padding:8px 34px 8px 12px;font:13px/1.35 system-ui,sans-serif;box-shadow:0 4px 14px #0006"><span id="gWarnT"></span><button id="gWarnX" aria-label="Dismiss" style="position:absolute;right:6px;top:4px;background:none;border:0;font-size:18px;cursor:pointer;color:#2a2200">×</button></div>
 <script>
@@ -273,10 +273,10 @@ function inUI(){const p=$("inSrc").value==="ptt";$("pttWrap").style.display=$("p
 function pttChan(u){try{const x=new URL(u);return(x.searchParams.get("ch")||new URLSearchParams(x.hash.slice(1)).get("ch")||"virtual").replace(/[^\w-]/g,"")||"virtual";}catch(e){return"virtual";}}
 function pttT(s){return PTT_PREFIX+pttCh+"/"+s;}
 function pttStat(m){$("pttSt").textContent="📻 "+m;}
-function pttBeat(){if(pttC&&pttC.connected)pttC.publish(pttT("presence/"+pttId),JSON.stringify({id:pttId,name:"BoondockEcho",ts:Date.now()}),{retain:true});}
+function pttBeat(){if(pttC&&pttC.connected)pttC.publish(pttT("presence/"+pttId),JSON.stringify({id:pttId,name:"SanketTranscription",ts:Date.now()}),{retain:true});}
 function pttConnect(){const url=PTT_BROKERS[pttBi%PTT_BROKERS.length];let ok=false;
  const c=pttC=mqtt.connect(url,{clientId:"ptt_"+pttId+"_"+Date.now()%1e6,clean:true,keepalive:20,reconnectPeriod:0,connectTimeout:8000,will:{topic:pttT("presence/"+pttId),payload:"",retain:true,qos:0}});
- c.on("connect",()=>{ok=true;c.subscribe([pttT("presence/+"),pttT("floor"),pttT("audio"),pttT("sstv")]);pttBeat();pttStat("Monitoring channel '"+pttCh+"' as BoondockEcho (listen-only) · "+url.replace(/\/\/.*@/,"//"));setStatus("📻 Listening to PTT channel <b>"+esc(pttCh)+"</b> — each transmission is transcribed.");});
+ c.on("connect",()=>{ok=true;c.subscribe([pttT("presence/+"),pttT("floor"),pttT("audio"),pttT("sstv")]);pttBeat();pttStat("Monitoring channel '"+pttCh+"' as SanketTranscription (listen-only) · "+url.replace(/\/\/.*@/,"//"));setStatus("📻 Listening to PTT channel <b>"+esc(pttCh)+"</b> — each transmission is transcribed.");});
  c.on("message",pttMsg);c.on("error",()=>{});
  c.on("close",()=>{if(!pttOn||c!==pttC)return;pttStat("disconnected — retrying…");if(!ok)pttBi++;setTimeout(()=>{c.end(true);if(pttOn)pttConnect();},ok?1500:300);});}
 function pttEnd(){const k=pttClip;pttClip=null;if(!k||!k.len)return;const dur=k.len/PTT_RATE;if(dur<0.4){setStatus("Short PTT burst ignored.");return;}
@@ -359,7 +359,7 @@ async function gdUpload(name,parent,blob,mime){const b="be"+Math.random().toStri
  return (await gdFetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id",{method:"POST",headers:{"Content-Type":"multipart/related; boundary="+b},body})).id;}
 const csvq=s=>'"'+String(s??"").replace(/"/g,'""')+'"';
 async function gdOne(c){const d=new Date(c.t),day=ymd(d),sess=c.session||("S-"+day.replace(/-/g,"")+"-000000-none"),base=`${day}_${hms(d)}_${sess}`;
- const root=await gdFolder("Boondock Echo"),df=await gdFolder(day,root),sf=await gdFolder(sess,df);
+ const root=await gdFolder("Sanket Transcription"),df=await gdFolder(day,root),sf=await gdFolder(sess,df);
  if(!c.driveWav){c.driveWav=await gdUpload(base+".wav",sf,c.audio,"audio/wav");await put(c);}
  if(c.img&&!c.driveImg){c.driveImg=await gdUpload(base+".png",sf,c.img,"image/png");await put(c);}
  const txt=`Timestamp: ${d.toLocaleString("en-IN",{timeZone:"Asia/Kolkata"})} IST (${d.toISOString()})\nSession ID: ${sess}\nDevice ID: ${(c.dev||{}).id||""}\nLocation: ${devLoc(c.dev||{})}\nGoogle Maps: ${mapUrl(c.dev||{})}\nKeywords: ${(c.kw||[]).join(", ")}\nDuration: ${c.dur.toFixed(1)} s\nSource language: ${c.lang||$("src").value||"auto"}\nTranscript: ${c.text||c.status||""}\nTranslation${c.dst?" ("+c.dst+")":""}: ${c.trans||""}\n`;
@@ -432,7 +432,7 @@ function rfc2047(s){if(/^[\x20-\x7e]*$/.test(s)&&s.length<=68)return s;const out
  return out.map(p=>"=?UTF-8?B?"+utf8b64(p)+"?=").join("\r\n ");}
 async function buildMime(c){const to=localStorage.getItem("be_emto")||"vibhvesh@gmail.com",sess=c.session||"no-session",when=istStr(c.t),kw=(c.kw||[]).join(", ");
  const dv=c.dev||{};const subj=alertSubject(c),b="be"+Math.random().toString(36).slice(2);
- const body=`BOONDOCK ECHO KEYWORD ALERT (DEMO)\n\nKeywords: ${kw}\nTimestamp: ${when} (${new Date(c.t).toISOString()})\nSession ID: ${sess}\nDevice ID: ${dv.id||"—"}\nLocation: ${devLoc(dv)}\nGoogle Maps: ${mapUrl(dv)||"—"}\nDuration: ${c.dur.toFixed(1)} s\nSource language: ${c.lang||"auto"}\n\nTranscript:\n${c.text||""}\n\nTranslation${c.dst?" ("+c.dst+")":""}:\n${c.trans||"(none)"}\n\nAudio clip attached (WAV).\n`;
+ const body=`SANKET TRANSCRIPTION KEYWORD ALERT (DEMO)\n\nKeywords: ${kw}\nTimestamp: ${when} (${new Date(c.t).toISOString()})\nSession ID: ${sess}\nDevice ID: ${dv.id||"—"}\nLocation: ${devLoc(dv)}\nGoogle Maps: ${mapUrl(dv)||"—"}\nDuration: ${c.dur.toFixed(1)} s\nSource language: ${c.lang||"auto"}\n\nTranscript:\n${c.text||""}\n\nTranslation${c.dst?" ("+c.dst+")":""}:\n${c.trans||"(none)"}\n\nAudio clip attached (WAV).\n`;
  const fn=`${ymd(new Date(c.t))}_${hms(new Date(c.t))}_${sess}.wav`;
  const mime=`To: ${to}\r\nSubject: ${rfc2047(subj)}\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary="${b}"\r\n\r\n--${b}\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n${wrap76(utf8b64(body))}--${b}\r\nContent-Type: audio/wav; name="${fn}"\r\nContent-Disposition: attachment; filename="${fn}"\r\nContent-Transfer-Encoding: base64\r\n\r\n${wrap76(await blobB64(c.audio))}--${b}--\r\n`;
  return b64u(utf8b64(mime));}
