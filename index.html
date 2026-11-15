@@ -71,7 +71,7 @@ mark.kw{background:#ff3b2f;color:#fff;padding:0 3px;border-radius:3px;font-weigh
 .em{font-size:11px;margin-top:3px}.em.ok{color:#7fe07a}.em.err{color:#ff8a80}.em.pend{color:var(--amb)}
 #emBanner{display:none;margin:4px 0;padding:8px;border-radius:8px;background:#ff3b2f;color:#fff;font-weight:800;font-size:12px;text-align:center;cursor:pointer;animation:bl 1.6s infinite;font-family:"Segoe UI",Roboto,sans-serif}
 .em button{background:#ffb43a;color:#1a1000;border:0;border-radius:6px;padding:4px 8px;font-weight:800;font-size:11px;margin-left:4px}
-</style><script src="https://unpkg.com/mqtt@5/dist/mqtt.min.js"></script><script src="radio/sstv.js"></script><script src="https://accounts.google.com/gsi/client" async defer onerror="window.__gisFail=1"></script></head><body>
+\n/* Embedded Sanket demo: hide manual radio URL/source controls and standalone radio link */\nbody.ptt-embedded #inRow,body.ptt-embedded .one{display:none!important}\nbody.ptt-embedded .radio{padding-top:28px}\n</style><script src="https://unpkg.com/mqtt@5/dist/mqtt.min.js"></script><script src="radio/sstv.js"></script><script src="https://accounts.google.com/gsi/client" async defer onerror="window.__gisFail=1"></script></head><body>
 <div class="radio"><div class="ant"></div><div class="knob"></div>
 <div class="body">
 <div class="plate"><div class="brand">GPT TRANSCRIPTION<small>BY CANBERRA VISION AI SYSTEMS</small></div><div class="tri"></div><span class="demo">DEMO</span><button class="gear" id="gearBtn" title="Settings" aria-label="Settings">⚙</button></div>
@@ -268,7 +268,7 @@ const PTT_PREFIX="ptt-radio-66ab9178/",PTT_BROKERS=["wss://public:public@public.
 const RADIO_DEF=new URL("radio/",location.href).href;
 function pttShareUI(){const u=$("pttUrl").value.trim()||RADIO_DEF,ch=pttChan(u),link=ch==="virtual"?u:u;$("pttShare").innerHTML=`Channel <b>${esc(ch)}</b> · share/open radio: <a href="${esc(link)}" target="_blank" rel="noopener" style="color:var(--lcdt)">${esc(link)}</a>`;}
 let pttSstv={};window.__sstvStats={images:0};let pttOn=false,pttC=null,pttId="",pttCh="virtual",pttUsers={},pttFloor=null,pttTimer=null,pttBi=0,pttClip=null;window.__pttStats={chunks:0,clips:0};
-const bootQ=new URLSearchParams(location.search);const bootSource=bootQ.get("source");const bootPtt=bootQ.get("pttUrl");if(bootSource==="ptt")localStorage.setItem("be_in","ptt");if(bootPtt)localStorage.setItem("be_ptt",bootPtt);$("inSrc").value=bootSource==="ptt"?"ptt":(localStorage.getItem("be_in")||"mic");$("pttUrl").value=bootPtt||localStorage.getItem("be_ptt")||RADIO_DEF;
+const bootQ=new URLSearchParams(location.search);const bootSource=bootQ.get("source");const bootPtt=bootQ.get("pttUrl");const embedMode=bootQ.get("embed")==="1";const autoStart=bootQ.get("autostart")==="1";if(bootSource==="ptt")localStorage.setItem("be_in","ptt");if(bootPtt)localStorage.setItem("be_ptt",bootPtt);$("inSrc").value=bootSource==="ptt"?"ptt":(localStorage.getItem("be_in")||"mic");$("pttUrl").value=bootPtt||localStorage.getItem("be_ptt")||RADIO_DEF;if(embedMode){document.body.classList.add("ptt-embedded");}
 function inUI(){const p=$("inSrc").value==="ptt";$("pttWrap").style.display=$("pttShare").style.display=p?"":"none";if(p)pttShareUI();}$("pttUrl").oninput=pttShareUI;$("inSrc").onchange=()=>{localStorage.setItem("be_in",$("inSrc").value);inUI();};inUI();
 function pttChan(u){try{const x=new URL(u);return(x.searchParams.get("ch")||new URLSearchParams(x.hash.slice(1)).get("ch")||"virtual").replace(/[^\w-]/g,"")||"virtual";}catch(e){return"virtual";}}
 function pttT(s){return PTT_PREFIX+pttCh+"/"+s;}
@@ -310,6 +310,7 @@ async function pttStart(){if(!window.mqtt){alert("MQTT library failed to load �
  newSession();pttId=Math.random().toString(36).slice(2,10);pttUsers={};pttFloor=null;pttClip=null;pttOn=true;running=true;pttConnect();
  let last=0;pttTimer=setInterval(()=>{const n=Date.now();if(n-last>=5000){last=n;pttBeat();}pttTick();},1000);
  $("startBtn").disabled=true;$("stopBtn").disabled=false;$("inSrc").disabled=true;pttStat("connecting…");draw();}
+if(autoStart&&$("inSrc").value==="ptt"){window.addEventListener("load",()=>{if(!$("startBtn").disabled)pttStart();},{once:true});}
 function pttStop(){pttEnd();pttOn=false;running=false;clearInterval(pttTimer);const c=pttC;pttC=null;try{c.publish(pttT("presence/"+pttId),"",{retain:true});setTimeout(()=>c.end(),200);}catch(e){}
  $("startBtn").disabled=false;$("stopBtn").disabled=true;$("inSrc").disabled=false;pttStat("stopped");setStatus("Stopped.");}
 window.addEventListener("beforeunload",()=>{if(pttOn&&pttC)try{pttC.publish(pttT("presence/"+pttId),"",{retain:true});}catch(e){}});
