@@ -57,7 +57,7 @@ button{font-family:Orbitron,sans-serif;cursor:pointer;border:0;border-radius:10p
 @keyframes pz{0%{box-shadow:0 0 0 0 #ff2d2dcc}100%{box-shadow:0 0 0 14px #ff2d2d00}}
 #sstvList{list-style:none;padding:0;margin:0}#sstvList li{padding:6px 0;border-top:1px solid #fff2}#sstvList canvas,#sstvList img{width:100%;max-width:320px;display:block;border-radius:6px;background:#000;image-rendering:auto}
 #sstvList .sm{font-size:11px;opacity:.8;display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap}#sstvP button{font-family:inherit;background:#2a2f38;color:#eee;border:1px solid #fff3;border-radius:8px;padding:8px;cursor:pointer}
-</style><link rel=stylesheet href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></head><body><div class=rig>
+</style></head><body><div class=rig>
 <div class=brand><div><h1>SANKETPTT</h1><small>EMERGENCY PTT RADIO · INDIA</small></div>
 <div class=leds><div class="led pw"><i></i>PWR</div><div class="led rx" id=ledrx><i></i>RX</div><div class="led tx" id=ledtx><i></i>TX</div></div></div>
 <div class=lcd><div class=row><span>CH</span><span><span id=count>…</span> ONLINE</span></div>
@@ -66,7 +66,7 @@ button{font-family:Orbitron,sans-serif;cursor:pointer;border:0;border-radius:10p
 <div id=login class=panel><h3>LOG ON</h3><label for=nm class=hint>Name or Call Sign</label><input id=nm placeholder="e.g. VU2ABC or Ravi" aria-label="Name or Call Sign"><button id=go>POWER ON · JOIN</button></div>
 <div id=main><div id=hd class=hint></div><button id=unlock>🔊 TAP TO ENABLE AUDIO</button><button id=ptt>PTT</button><div class=hint>Hold to talk · Desktop: hold Space</div></div>
 <div class=panel><h3>ON THE AIR</h3><ul id=us></ul></div>
-<div class=panel id=locp><h3><span>📍 STATION MAP</span><label id=lt><input type=checkbox id=shareloc checked> SHARE</label></h3><div id=locnote>⚠️ Your location is shared with <b>everyone on this channel</b> (public relay). Untick SHARE to stop.</div><div id=locst class=hint>Location: not shared yet</div><div id=map></div></div>
+<div class=panel id=locp><h3><span>📍 GPS LOCATION</span><label id=lt><input type=checkbox id=shareloc checked> SHARE</label></h3><div id=locnote>Location coordinates only. When SHARE is enabled, your GPS location is sent to everyone on this channel. Untick SHARE to stop.</div><div id=locst class=hint>GPS location: waiting for permission…</div></div>
 <div class=panel id=sstvP><h3><span>📷 SSTV IMAGES</span><label style="font-size:11px"><input type=checkbox id=sstvMute> MUTE SSTV AUDIO</label></h3>
 <div id=sstvTx style="display:none"><canvas id=sstvPrev width=320 height=240 style="width:100%;max-width:320px;display:block;margin:auto;border-radius:6px"></canvas>
 <div style="display:flex;gap:6px;margin-top:6px"><select id=sstvMode><option value=r36>Robot36 (~37 s)</option></select><button id=sstvSend style="flex:1">📡 SEND IMAGE</button><button id=sstvCancel>✕</button></div><div id=sstvSt class=hint></div></div>
@@ -74,7 +74,7 @@ button{font-family:Orbitron,sans-serif;cursor:pointer;border:0;border-radius:10p
 <ul id=sstvList><li class=hint>No images yet</li></ul></div>
 <div class=panel><h3><span>📼 SESSION LOG</span><button id=clr>CLEAR</button></h3><ul id=log><li class=hint>No transmissions yet</li></ul></div>
 <div id=net>connecting…</div><div class=hint style="text-align:center;margin-top:8px"><a href="../" target=_blank style="color:inherit">🎙 Open Boondock Echo (transcribe this channel)</a></div></div>
-<script src="https://unpkg.com/mqtt@5/dist/mqtt.min.js"></script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/mqtt@5/dist/mqtt.min.js"></script>
 <script src="sstv.js"></script>
 <script id=core>
 // ---- protocol core (also used by headless tests) ----
@@ -177,7 +177,7 @@ clr.onclick=function(){if(player){player.pause();player=null;playingKey=null}rec
 function render(){var f=st0.floor;count.textContent=st0.users.length;chlabel.textContent=radio.ch.toUpperCase();
  us.innerHTML=st0.users.map(function(u){var t=f&&f.id===u.id;return '<li class="'+(t?'tk':u.id===radio.id?'me':'')+'">'+(t?'🎙 ':'')+esc(u.name)+(u.id===radio.id?' ·YOU':'')+pinTxt(u)+'</li>'}).join('')||'<li class=none>No stations</li>';
  var busy=f&&f.id!==radio.id;ptt.className=granted?'on':busy?'busy':holding?'wait':'';ptt.textContent=granted?'ON AIR':busy?'BUSY':holding?'…':'PTT';
- drawMap();st.textContent=granted?'▲ TX · TRANSMITTING':f&&busy?'▼ RX · '+f.name:holding?'CLAIMING…':'STANDBY'}
+ st.textContent=granted?'▲ TX · TRANSMITTING':f&&busy?'▼ RX · '+f.name:holding?'CLAIMING…':'STANDBY'}
 function start(){if(radio)radio.leave();radio=new Radio(mqtt,{ch:CHANNEL,on:function(k,v){if(k==='state'){var pf=st0.floor;st0=v;if(granted&&(!v.floor||v.floor.id!==radio.id)){granted=false}
   if(pf&&(!v.floor||v.floor.id!==pf.id)){rec.end();sstvEnd()}render()}
  else if(k==='sstv'){sstvMeta(v)}else if(k==='audio'){var f=radio.floor;if(f)sstvFeed(f,v);if(sstvMute.checked&&sstvRx&&sstvRx.rx.started&&!sstvRx.rx.done){rxAt=Date.now();rec.feed(f.id,f.name,v,false,undefined,radio.users[f.id]&&radio.users[f.id].loc);return}rxAt=Date.now();rxLvl=Math.max(rxLvl,lvl(v));if(f){var fu=radio.users[f.id];rec.feed(f.id,f.name,v,false,undefined,fu&&fu.loc)}play(v)}else if(k==='net')net.textContent='relay: '+v+' · topic '+PTT_PREFIX+radio.ch}});radio.browser=true;render()}
@@ -200,9 +200,7 @@ ptt.addEventListener('pointerdown',function(e){ptt.setPointerCapture(e.pointerId
 ptt.oncontextmenu=function(e){e.preventDefault()};
 onkeydown=function(e){if(e.code=='Space'&&main.style.display=='block'&&!e.repeat)down(e)};onkeyup=function(e){if(e.code=='Space')up(e)};
 // ---- location sharing (consent via browser prompt; IP fallback) ----
-var watchId=null,lastSent=0,lastPos=null,geoCache={},marks=window.marks||{},fitted=false;var map=window.map instanceof HTMLElement?null:map;
-var COLORS=['#00c2ff','#ffb800','#39ff88','#ff3d7f','#b26bff','#ff8a00','#00e5c7','#ffe600'];
-function colorOf(id){var h=0;for(var i=0;i<id.length;i++)h=(h*31+id.charCodeAt(i))>>>0;return COLORS[h%COLORS.length]}
+var watchId=null,lastSent=0,lastPos=null,geoCache={};
 function locTxt(l){return (l.city||(l.lat.toFixed(3)+', '+l.lon.toFixed(3)))+(l.src==='ip'?' (approx.)':l.acc?' ±'+(l.acc<1000?l.acc+'m':(l.acc/1000).toFixed(1)+'km'):'')}
 function pinTxt(u){if(!u.loc)return '';var d=u.id!==radio.id?distKm(radio.loc,u.loc):null;return '<span class=pin>📍 '+esc(locTxt(u.loc))+(d!=null?' · '+(d<10?d.toFixed(1):Math.round(d))+' km':'')+'</span>'}
 function sendLoc(l){if(!shareloc.checked)return;radio.setLoc(l);locst.textContent='Sharing: '+locTxt(radio.loc)+(l.src==='gps'?' · GPS':' · IP-based, approximate');render()}
@@ -228,15 +226,6 @@ function startLoc(){if(!shareloc.checked)return;
   function(e){ipLoc(e.code===1?'denied':'unavailable')},{enableHighAccuracy:true,timeout:15000,maximumAge:60000})}
 function stopLoc(){if(watchId!=null)navigator.geolocation.clearWatch(watchId);watchId=null;lastPos=null;radio.setLoc(null);locst.textContent='Location sharing stopped';render()}
 shareloc.onchange=function(){if(shareloc.checked){if(main.style.display==='block')startLoc()}else stopLoc()};
-function drawMap(){try{drawMap0()}catch(e){console.warn('map',e)}}
-function drawMap0(){if(typeof L==='undefined')return;if(!map){map=L.map('map',{worldCopyJump:true}).setView([20,0],1);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; OpenStreetMap'}).addTo(map)}
- var f=st0.floor,seen={},pts=[];st0.users.forEach(function(u){if(!u.loc)return;seen[u.id]=1;var t=f&&f.id===u.id;pts.push([u.loc.lat,u.loc.lon]);
-  var ic=L.divIcon({className:'',iconSize:[16,16],html:'<div class="mk'+(t?' tk':'')+'" style="background:'+colorOf(u.id)+'"></div>'});
-  if(!marks[u.id])marks[u.id]=L.marker([u.loc.lat,u.loc.lon],{icon:ic}).addTo(map);else{marks[u.id].setLatLng([u.loc.lat,u.loc.lon]);marks[u.id].setIcon(ic)}
-  marks[u.id].bindTooltip(esc(u.name)+(u.id===radio.id?' (you)':'')+' · '+esc(locTxt(u.loc)))});
- for(var k in marks)if(!seen[k]){map.removeLayer(marks[k]);delete marks[k]}
- if(pts.length&&!fitted){fitted=true;map.fitBounds(pts,{maxZoom:10,padding:[20,20]})}}
 addEventListener('pagehide',function(){radio.leave()});
 </script>
 <script>
