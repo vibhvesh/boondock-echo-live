@@ -1,5 +1,5 @@
 (function () {
-  const skin = document.body.dataset.skin;
+  const skin = new URLSearchParams(location.search).get("skin") || document.body.dataset.skin;
   const themes = {
     motorola: {
       bg: "#101317", frame: "#292e35", edge: "#c83232", lcd: "#17251c", screen: "#a8d878",
