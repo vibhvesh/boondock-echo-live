@@ -31,12 +31,12 @@ $("simpleChannel").onchange=()=>{const u=new URL(location.href);u.searchParams.s
 const auto=$("simpleAutoPower");auto.checked=localStorage.getItem("sanketptt.autoPower")!=="off";auto.onchange=()=>localStorage.setItem("sanketptt.autoPower",auto.checked?"on":"off");
 more.onclick=()=>{drawer.classList.toggle("open");$("radioLinesDev").classList.remove("open")};$("moreClose").onclick=()=>drawer.classList.remove("open");
 const sstv=$("sstvP"),sstvBtn=$("sstvBtn"),sstvFile=$("sstvFile");
-const sstvRow=document.createElement("div");sstvRow.id="simpleSstvRow";sstvRow.innerHTML='<span>SSTV SEND</span><button id="sstvBrowse">BROWSE</button><button id="sstvTake">CAMERA</button>';main.after(sstvRow);
+const sstvRow=document.createElement("div");sstvRow.id="simpleSstvRow";sstvRow.innerHTML='<span>SSTV SEND</span><small id="sstvProgress" aria-live="polite"></small><button id="sstvBrowse">BROWSE</button><button id="sstvTake">CAMERA</button>';main.after(sstvRow);
 const sstvModal=document.createElement("div");sstvModal.id="simpleSstvModal";sstvModal.innerHTML='<div class="sstv-modal-head"><b>REVIEW IMAGE</b><button id="sstvModalClose" aria-label="Close">×</button></div>';sstvModal.appendChild($("sstvTx"));rig.appendChild(sstvModal);
 $("sstvModalClose").onclick=()=>{$("sstvTx").style.display="none";sstvModal.classList.remove("open")};
 $("sstvBrowse").onclick=()=>{sstvFile.removeAttribute("capture");sstvFile.click()};
 $("sstvTake").onclick=()=>{sstvFile.setAttribute("capture","environment");sstvFile.click()};
-$("sstvSend").textContent="OK · SEND";$("sstvCancel").textContent="CANCEL";
+$("sstvSend").textContent="OK · SEND";$("sstvCancel").textContent="CANCEL";window.addEventListener("boondock:sstv-start",()=>{sstvModal.classList.remove("open");$("sstvTx").style.display="none";$("sstvProgress").textContent="SENDING…"});const sstvStatusObserver=new MutationObserver(()=>{$("sstvProgress").textContent=$("sstvSt")?.textContent||""});if($("sstvSt"))sstvStatusObserver.observe($("sstvSt"),{childList:true,subtree:true,characterData:true});
 if(sstvFile)document.body.appendChild(sstvFile);
 if(sstvBtn)sstvBtn.remove();if(sstv)sstv.remove();
 const fm=$("radioLinesDev"),audio=$("radioLineAudio");fm.classList.remove("open");
@@ -217,6 +217,7 @@ const oldDown=window.down;if(oldDown)window.down=function(e){pauseFm();return ol
 setInterval(()=>{if(!window.radio)return;const f=radio.floor,active=!!(f&&(f.id!==radio.id||radio.talking));if(active&&!busy)pauseFm();if(!active&&busy&&fmWasPlaying&&audio){fmWasPlaying=false;audio.play().catch(()=>{})}busy=active},180);
 
 
+const sstvProgressStyle=document.createElement("style");sstvProgressStyle.textContent=`#simpleSstvRow #sstvProgress{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:9px Arial;color:#ffe2a8;letter-spacing:0}`;document.head.appendChild(sstvProgressStyle);
 const playbackStyle=document.createElement("style");playbackStyle.textContent=`.audio-ribbon{display:flex!important;flex-direction:column!important;justify-content:center;gap:3px}.audio-ribbon .ribbon-play{font-weight:800;color:#ffe3a8;font-size:9px}.audio-ribbon.mine,.transcript-item.mine{border-color:#f5c77a88;background:#7c301c}.message-play{border:1px solid #f0cbbb88;border-radius:6px;background:#702316;color:#ffe9df;padding:3px 7px;font:800 9px Arial}.message-play.playing,.ribbon-play.playing{background:#a34a24;color:#fff}`;document.head.appendChild(playbackStyle);
 const unifiedUiStyle=document.createElement("style");unifiedUiStyle.textContent=`#simpleFM{min-width:66px!important}#fmPanelClose{margin-left:auto;width:30px;height:28px;border-radius:7px;background:#641b10;border:1px solid #f0cbbb;color:#ffe7dc;font:22px Arial;line-height:1}#radioLinesDev{top:76px!important;bottom:48px!important;max-height:calc(100dvh - 132px)!important;border-radius:14px!important;box-shadow:0 12px 34px #000b!important}#radioLinesDev.open{display:block!important}#radioLinesDev h3{display:flex;align-items:center;gap:8px}#radioLinesDev .radio-tuner #radioPowerBtn{font-size:15px!important}#radioLinesDev .radio-tuner #radioPowerBtn:before{content:"FM · "}#radioLinesDev .radio-tuner #radioPowerBtn{letter-spacing:1px}#radioLinesDev .band-row button:disabled{opacity:.4;filter:grayscale(1)}#radioLinesDev .rl-row button:disabled{opacity:.45}#simpleRadioTop button:focus-visible,#simpleSstvRow button:focus-visible{outline:2px solid #ffe5a8;outline-offset:2px}`;document.head.appendChild(unifiedUiStyle);
 if(typeof window.render==="function")window.render();
