@@ -111,21 +111,52 @@ function stopMic(){
  try{if(ac&&ac.state!=="closed")ac.close()}catch(e){}
  granted=false;holding=false;sstvTx=false;
 }
+async function powerOnRadio(){
+ if(!name.value.trim()){name.focus();$("st").textContent="ENTER CALL SIGN";return false}
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error("MICROPHONE_API_UNAVAILABLE");
+ $("st").textContent="REQUESTING MICROPHONE";
+ const callSign=fmtCS(name.value);name.value=callSign;localStorage.nm=callSign;
+ // This is the only place that requests microphone permission and joins.
+ stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+ if(!stream||!stream.getAudioTracks().some(t=>t.readyState==="live"))throw new Error("NO_LIVE_MICROPHONE_TRACK");
+ const AudioCtor=window.AudioContext||window.webkitAudioContext;
+ if(!AudioCtor)throw new Error("AUDIO_CONTEXT_UNAVAILABLE");
+ ac=new AudioCtor();
+ await ac.resume();
+ try{unlockAudio()}catch(e){}
+ startLoc();
+ login.style.display="none";main.style.display="block";
+ $("hd").textContent="#"+radio.ch+" — "+callSign;
+ if(!radio||radio.closed)start();
+ radio.join(callSign);
+ const source=ac.createMediaStreamSource(stream);
+ proc=ac.createScriptProcessor(4096,1,1);
+ const mute=ac.createGain();mute.gain.value=0;
+ source.connect(proc);proc.connect(mute);mute.connect(ac.destination);
+ proc.onaudioprocess=function(e){
+  if(!granted||sstvTx||!radio||!radio.name)return;
+  const input=e.inputBuffer.getChannelData(0),ratio=ac.sampleRate/RATE,count=Math.floor(input.length/ratio),out=new Int16Array(count);
+  for(let k=0;k<count;k++)out[k]=Math.max(-1,Math.min(1,input[Math.floor(k*ratio)]))*32767;
+  if(radio.sendAudio(out)){txLvl=Math.max(txLvl,lvl(out));rec.feed(radio.id,radio.name,out,true,undefined,radio.loc)}
+ };
+ setInterval(function(){if(ac&&ac.state!=="closed")unlock.style.display=ac.state==="running"?"none":"block"},1000);
+ render();
+ return !!(radio&&radio.name===callSign);
+}
 powerBtn.addEventListener("click",async()=>{
  if(powerBtn.disabled)return;
  if(!radioPowered){
-  if(!name.value.trim()){name.focus();$("st").textContent="ENTER CALL SIGN";return}
-  powerBtn.disabled=true;powerText.textContent="ALLOW MIC";
+  powerBtn.disabled=true;powerText.textContent="STARTING";
   try{
-   // go.onclick now requests the microphone first and joins only after permission succeeds.
-   await go.onclick.call(go);
-   if(window.radio&&radio.name){setRadioPower(true);$("st").textContent="RADIO ON · JOINING CHANNEL"}
-   else{setRadioPower(false);$("st").textContent="RADIO DID NOT JOIN"}
+   const joined=await powerOnRadio();
+   if(!joined)throw new Error("RADIO_JOIN_NOT_CONFIRMED");
+   setRadioPower(true);$("st").textContent="RADIO ON · "+radio.ch.toUpperCase();
   }catch(e){
-   setRadioPower(false);
-   const denied=e&&(["NotAllowedError","PermissionDeniedError","SecurityError"].includes(e.name));
-   $("st").textContent=denied?"MIC PERMISSION REQUIRED":"MICROPHONE UNAVAILABLE";
-   if(denied)alert("Microphone permission is required to power on Boondock Echo. Allow microphone access in your browser, then press POWER ON again.");
+   stopMic();setRadioPower(false);
+   const msg=e&&e.name?e.name:String(e);
+   $("st").textContent=msg==="NotAllowedError"||msg==="PermissionDeniedError"?"MIC PERMISSION DENIED":msg==="NotFoundError"?"NO MICROPHONE FOUND":"POWER ON FAILED";
+   console.error("Boondock radio power-on failed:",e);
+   alert("Boondock Echo could not power on: "+msg+". Check microphone permission for this site and try again.");
   }finally{powerBtn.disabled=false}
  }else{
   try{if(window.radio&&radio.name)radio.leave()}catch(e){}
@@ -149,8 +180,8 @@ setRadioPower(false);
   if(permission.state!=="granted"){$("st").textContent=permission.state==="denied"?"MIC BLOCKED · CHECK BROWSER SETTINGS":"MIC PERMISSION NEEDED · PRESS POWER";return}
   if(radioPowered||powerBtn.disabled)return;
   powerBtn.disabled=true;powerText.textContent="STARTING";
-  try{await go.onclick.call(go);if(window.radio&&radio.name){setRadioPower(true);$("st").textContent="RADIO ON · JOINING CHANNEL"}else{setRadioPower(false);$("st").textContent="RADIO JOIN FAILED"}}
-  catch(e){setRadioPower(false);$("st").textContent="MIC UNAVAILABLE · PRESS POWER"}
+  try{const joined=await powerOnRadio();if(joined){setRadioPower(true);$("st").textContent="RADIO ON · "+radio.ch.toUpperCase()}else{setRadioPower(false);$("st").textContent="RADIO JOIN FAILED"}}
+  catch(e){stopMic();setRadioPower(false);$("st").textContent="MIC UNAVAILABLE · PRESS POWER";console.error("Boondock auto-start failed:",e)}
   finally{powerBtn.disabled=false}
  }catch(e){$("st").textContent="MIC PERMISSION CHECK · PRESS POWER"}
 })();
