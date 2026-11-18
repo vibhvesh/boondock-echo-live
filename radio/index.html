@@ -273,6 +273,7 @@ if(typeof module!=='undefined')module.exports={Recorder:Recorder,buildWav:buildW
 </script>
 <script>
 var RATE=12000,radio,ac,stream,proc,playT=0,holding=false,granted=false,st0={users:[],floor:null},rxLvl=0,txLvl=0,rxAt=0;
+var nm=document.getElementById('nm'),login=document.getElementById('login'),main=document.getElementById('main'),hd=document.getElementById('hd'),unlock=document.getElementById('unlock'),ptt=document.getElementById('ptt'),count=document.getElementById('count'),chlabel=document.getElementById('chlabel'),st=document.getElementById('st'),bars=document.getElementById('bars'),us=document.getElementById('us'),log=document.getElementById('log'),clr=document.getElementById('clr'),net=document.getElementById('net'),shareloc=document.getElementById('shareloc'),locst=document.getElementById('locst'),sstvList=document.getElementById('sstvList'),sstvFile=document.getElementById('sstvFile'),sstvPrev=document.getElementById('sstvPrev'),sstvSt=document.getElementById('sstvSt'),sstvSend=document.getElementById('sstvSend'),sstvCancel=document.getElementById('sstvCancel'),sstvMute=document.getElementById('sstvMute'),sstvBtn=document.getElementById('sstvBtn'),sstvTxPanel=document.getElementById('sstvTx'),sstvP=document.getElementById('sstvP');
 try{localStorage.removeItem('ch')}catch(e){}nm.value=localStorage.nm||'';
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 var NB=20;bars.innerHTML=new Array(NB+1).join('<b></b>');var barEls=bars.children;
