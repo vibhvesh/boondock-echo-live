@@ -123,7 +123,7 @@ body{overflow-x:hidden}
 #clientControls .auto-row input{width:18px;height:18px;margin:0;accent-color:#e4b72e}
 #clientControls .control-actions{display:flex;gap:8px;margin-top:9px}
 #clientControls button{flex:1;padding:10px 8px;border-radius:8px;background:linear-gradient(#d6a83a,#8d6418);color:#17130a;font:900 11px system-ui;letter-spacing:.8px}
-#radioLinesDev{display:none}#radioLinesDev.open{display:block}
+#radioDirectoryImport input{flex:1 1 100%;min-width:0;min-height:42px;padding:10px;border-radius:8px;border:1px solid #8796a3;background:#101820;color:#f3f6f8;font:12px system-ui}\n#radioDirectoryImport button{width:100%;background:linear-gradient(#e7b94e,#9a6b18);color:#1a1407;font-weight:900}\n#radioLinesDev{display:none}#radioLinesDev.open{display:block}
 .rig[data-layout=handheld] #locp,.rig[data-layout=handheld] #sstvP{display:none}
 .rig[data-layout=control] #radioLinesDev,.rig[data-layout=fm] #radioLinesDev{display:block}
 .rig[data-layout=fm] #locp{display:none}
@@ -172,6 +172,11 @@ body{overflow-x:hidden}
 </div>
 <div class="rl-status" id="radioLineStatus" role="status">Choose a radio line. Play listens on this device; Bridge publishes it into the selected PTT channel as a radio station.</div>
 <div class="rl-note">DEV browser gateway: keep this page open while bridging. Stream providers must permit browser playback and audio capture (CORS). Radio lines are receive-only; they cannot receive PTT transmissions.</div>
+<div class="rl-row" id="radioDirectoryImport" style="margin-top:9px">
+ <input id="radioDirectoryUrl" type="url" placeholder="Paste radio directory / M3U / JSON link" aria-label="Radio directory URL">
+ <button id="radioDirectoryImportBtn" type="button">IMPORT &amp; TEST</button>
+</div>
+<div class="rl-status" id="radioDirectoryImportStatus">Paste a public station-list URL to discover and test additional streams. Direct JSON and M3U lists are supported.</div>
 <audio id="radioLineAudio" playsinline preload="none"></audio>
 </section>
 <div id=main><div id=hd class=hint></div><button id=unlock>🔊 TAP TO ENABLE AUDIO</button><button id=ptt>PTT</button><div class=hint>Hold to talk · Desktop: hold Space</div></div>
