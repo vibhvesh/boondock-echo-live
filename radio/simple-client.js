@@ -105,7 +105,7 @@ powerBtn.addEventListener("click",async()=>{
   try{go.click();setTimeout(()=>{const on=!!(window.radio&&radio.name);setRadioPower(on);powerBtn.disabled=false},900)}
   catch(e){powerBtn.disabled=false;setRadioPower(false)}
  }else{
-  try{radio.leave()}catch(e){}
+  try{radio.leave()}catch(e){}radio=null;
   try{if(proc){proc.disconnect();proc.onaudioprocess=null;proc=null}}catch(e){}
   try{if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}catch(e){}
   try{if(ac&&ac.state!=="closed")ac.close()}catch(e){}
@@ -126,5 +126,5 @@ setInterval(()=>{if(!window.radio)return;const f=radio.floor,active=!!(f&&(f.id!
 if(auto.checked){if(!name.value)name.value=localStorage.getItem("nm")||"SANKET AUTO";setTimeout(()=>{if(window.radio&&!radio.name&&localStorage.getItem("sanketptt.autoPower")!=="off")go.click()},8000)}
 if(typeof window.render==="function")window.render();
 setRadioPower(!!(window.radio&&radio.name));
-setInterval(()=>{if(window.radio&&radio.name&&!holding&&!granted&&!(radio.floor&&radio.floor.id!==radio.id))ptt.textContent="HOLD TO TALK"},500);
+setInterval(()=>{const powered=!!(window.radio&&radio.name);if(powerBtn&&!powerBtn.disabled&&powerBtn.classList.contains("is-on")!==powered)setRadioPower(powered);if(powered&&!holding&&!granted&&!(radio.floor&&radio.floor.id!==radio.id))ptt.textContent="HOLD TO TALK"},500);
 })();
