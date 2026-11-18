@@ -5,7 +5,8 @@
     {id:"police-ptt",name:"POLICE PTT"},
     {id:"hospital-ptt",name:"HOSPITAL PTT"},
     {id:"mall-ptt",name:"MALL PTT"},
-    {id:"construction-ptt",name:"CONSTRUCTION PTT"}
+    {id:"construction-ptt",name:"CONSTRUCTION PTT"},
+    {id:"boondockecho-lte",name:"BOONDOCK ECHO LTE"}
   ];
   const rig=document.querySelector(".rig");
   const lcd=document.querySelector(".lcd");
