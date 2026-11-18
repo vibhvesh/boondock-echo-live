@@ -7,7 +7,11 @@ const params=new URLSearchParams(location.search),ch=params.get("ch")||"virtual"
 const skins=[["boondockecho","Boondock Echo"],["motorola","Motorola"],["hytera","Hytera"],["kenwood","Kenwood"],["baofeng","Baofeng"],["sonim","Sonim"]];
 const top=document.createElement("div");top.id="simpleRadioTop";top.innerHTML='<div class="simple-top-left"><button id="radioPower" type="button" aria-label="Power on radio" aria-pressed="false"><span class="power-glyph">⏻</span><span id="radioPowerText">OFF</span></button><div class="simple-channel"><i></i><b id="simpleChannelName"></b></div></div><div><select id="simpleSkin" aria-label="Radio skin"></select><button id="simpleClose" aria-label="Close radio">×</button></div>';
 rig.querySelector(".brand").after(top);
-const ledGroup=document.querySelector(".leds"),ledPwr=ledGroup&&ledGroup.querySelector(".led.pw");if(ledGroup){top.querySelector(".simple-channel").after(ledGroup);ledGroup.style.display="flex";ledGroup.style.gap="7px";ledGroup.style.alignItems="center"}if(ledPwr){ledPwr.id="ledpw";ledPwr.classList.add("on")}
+const ledGroup=document.querySelector(".leds"),ledPwr=ledGroup&&ledGroup.querySelector(".led.pw");
+if(ledGroup){top.querySelector(".simple-channel").after(ledGroup);ledGroup.style.display="flex";ledGroup.style.gap="7px";ledGroup.style.alignItems="center"}
+if(ledPwr){ledPwr.id="ledpw";ledPwr.classList.remove("on")}
+["rx","tx"].forEach(kind=>{const old=ledGroup&&ledGroup.querySelector(".led."+kind);if(old&&old.tagName!=="BUTTON"){const btn=document.createElement("button");btn.type="button";btn.id=kind==="rx"?"ledrx":"ledtx";btn.className=old.className+" status-led";btn.setAttribute("aria-label",kind==="rx"?"Receive status":"Transmit status");btn.setAttribute("aria-pressed","false");btn.innerHTML=old.innerHTML;old.replaceWith(btn)}});
+const ledRx=$("ledrx"),ledTx=$("ledtx");
 skins.forEach(([v,n])=>$("simpleSkin").add(new Option(n,v)));$("simpleSkin").value=params.get("skin")||"boondockecho";
 $("simpleSkin").onchange=()=>{try{const u=new URL(window.parent.location.href);u.searchParams.set("skin",$("simpleSkin").value);window.parent.location.href=u.href}catch(e){const u=new URL(location.href);u.searchParams.set("skin",$("simpleSkin").value);location.href=u.href}};
 $("simpleChannelName").textContent=(channels.find(x=>x[0]===ch)||channels[0])[1];
@@ -82,38 +86,48 @@ const css=[
 "#simpleSstvRow{display:flex;align-items:center;gap:6px;flex:0 0 36px;min-height:36px;padding:3px 5px;border:1px solid #f0cbbb88;border-radius:9px;background:#5d1a11;color:#ffe9df;font:800 9px Arial;letter-spacing:1px}#simpleSstvRow span{flex:1}#simpleSstvRow button{height:28px;min-width:82px;background:#e9c8b8;color:#51170e;border-radius:7px;font:800 10px Arial}#simpleSstvModal{display:none;position:fixed;z-index:60;inset:0;background:#180b09ed;align-items:center;justify-content:center;padding:16px}#simpleSstvModal.open{display:flex}#simpleSstvModal #sstvTx{display:block!important;width:min(94vw,390px);max-height:90dvh;overflow:auto;background:#5d1a11;padding:10px;border:1px solid #f0cbbb;border-radius:12px}#simpleSstvModal canvas{width:100%!important;height:auto!important}.sstv-modal-head{display:flex;justify-content:space-between;align-items:center;color:#ffe9df;font:800 12px Arial;margin-bottom:8px}.sstv-modal-head button{background:#7b291b;color:white;padding:6px 10px}#simpleMoreDrawer{top:72px;bottom:auto;max-height:75dvh;overflow:auto}#simpleMoreDrawer.open{display:block}#simpleRadioTop>div:last-child{display:flex;align-items:center;gap:5px}@media(max-height:720px){#ptt{width:min(25vw,142px)!important;height:min(25vw,142px)!important;min-width:105px!important;min-height:105px!important}#simpleMessages{height:auto;min-height:0}#nm{min-height:28px!important;font-size:14px!important}#main .hint{display:none!important}}",
 ].join("\n");
 const style=document.createElement("style");style.id="simpleRadioStyles";style.textContent=css;document.head.appendChild(style);
+const statusButtonStyle=document.createElement("style");statusButtonStyle.textContent=`.led.status-led{appearance:none;-webkit-appearance:none;cursor:default;border:1px solid #f0cbbb55;border-radius:8px;padding:4px 6px;min-width:34px;background:linear-gradient(#38130f,#1e0b09);color:#e9cabc;font:900 9px Arial;display:flex;flex-direction:column;align-items:center;gap:3px;box-shadow:inset 0 1px 2px #ffffff18}.led.status-led i{width:10px;height:10px;border-radius:50%;background:#292929;box-shadow:inset 0 1px 3px #000}.led.status-led.rx.on{color:#c9ffe0;border-color:#45ed8a88}.led.status-led.rx.on i{background:#45ed8a;box-shadow:0 0 10px #45ed8a}.led.status-led.tx.on{color:#ffd1ce;border-color:#ff514b99}.led.status-led.tx.on i{background:#ff514b;box-shadow:0 0 10px #ff514b}.led.status-led:focus{outline:1px solid #ffe0cf}#simpleSquelch{display:flex}#simpleRadioTop .simple-top-left{display:flex;align-items:center;gap:8px;min-width:0;flex:1}#radioPower{min-width:64px;height:32px;border-radius:18px;border:1px solid #f8d7c5;background:linear-gradient(#502017,#2a100c);color:#f8dfd3;display:flex;align-items:center;justify-content:center;gap:4px;font:900 9px Arial;box-shadow:inset 0 1px 2px #ffffff30,0 2px 5px #0007}#radioPower .power-glyph{font-size:21px}#radioPower.is-on{background:linear-gradient(#f5c35e,#a95c1a);color:#30140c;box-shadow:0 0 10px #ffb52d88}#ptt:disabled{opacity:.58;filter:saturate(.55)}.lcd .meter{display:none}#simpleRadioTop .leds{display:flex;gap:5px!important;align-items:center}`;document.head.appendChild(statusButtonStyle);
+
 const powerStyle=document.createElement("style");powerStyle.textContent=`#simpleRadioTop .simple-top-left{display:flex;align-items:center;gap:8px;min-width:0;flex:1}#radioPower{height:31px;min-width:62px;padding:2px 8px;border-radius:18px;border:1px solid #f7d9c9;background:linear-gradient(180deg,#542018,#2c100c);color:#f5d8cc;display:flex;align-items:center;justify-content:center;gap:4px;box-shadow:inset 0 1px 2px #ffffff30,0 2px 5px #0007;font:900 9px Arial;letter-spacing:1px}#radioPower .power-glyph{font:22px Arial;line-height:1}#radioPower.is-on{background:linear-gradient(180deg,#f4c15d,#a65b1a);color:#32140b;border-color:#ffe6a8;box-shadow:0 0 10px #ffb52d88,inset 0 1px 2px #fff9}#radioPower:disabled{opacity:.7}#ptt:disabled{opacity:.55;filter:grayscale(.45);pointer-events:none}#simpleRadioTop .simple-channel{min-width:0}#simpleRadioTop>div:last-child{flex:0 0 auto}@media(max-width:390px){#radioPower{min-width:54px;height:29px;padding:1px 6px}#radioPower .power-glyph{font-size:19px}}`;document.head.appendChild(powerStyle);
 
 const ledStyle=document.createElement("style");ledStyle.textContent=`.leds{gap:7px!important}.led{font:800 8px Arial!important;letter-spacing:1px}.led i{width:11px!important;height:11px!important;display:block}#ledpw.on i{background:#ffc247!important;box-shadow:0 0 10px #ffc247;animation:pwrGlow 2s ease-in-out infinite}#ledrx.on i{background:#45ed8a!important;box-shadow:0 0 12px #45ed8a;animation:rxBlink .55s steps(2,end) infinite}#ledtx.on i{background:#ff514b!important;box-shadow:0 0 13px #ff514b;animation:txBlink .28s steps(2,end) infinite}@keyframes pwrGlow{50%{box-shadow:0 0 3px #ffc247;opacity:.8}}@keyframes rxBlink{50%{opacity:.25;box-shadow:none}}@keyframes txBlink{50%{opacity:.15;box-shadow:none}}#simpleRadioTop{gap:7px!important;flex-wrap:nowrap!important}#simpleRadioTop .simple-channel{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#simpleRadioTop>div:last-child{display:flex;align-items:center;gap:4px}#simpleFM{min-width:48px!important;padding:0 6px!important}#simpleMore{min-width:26px!important;font-size:18px!important}#simpleSkin{max-width:88px!important;min-width:0!important}#simpleClose{flex:0 0 28px}#simpleSstvRow{margin-top:2px}@media(max-width:390px){.simple-channel{font-size:9px!important}.led{font-size:7px!important}.led i{width:9px!important;height:9px!important}#simpleSkin{max-width:72px!important}#simpleFM{min-width:42px!important;font-size:8px!important}}`;document.head.appendChild(ledStyle);
 
 if(sstvFile)sstvFile.addEventListener("change",()=>{if(sstvFile.files&&sstvFile.files.length){sstvModal.classList.add("open");$("sstvTx").style.display="block";drawer.classList.remove("open")}});
 $("sstvCancel")?.addEventListener("click",()=>{sstvModal.classList.remove("open");$("sstvTx").style.display="none"});
-ptt.addEventListener("pointerdown",e=>{if(!window.radio||!radio.name){e.preventDefault();e.stopImmediatePropagation();if(!name.value.trim()){name.focus();return}go.click()}},true);
-ptt.addEventListener("click",e=>{if(!window.radio||!radio.name){e.preventDefault();e.stopImmediatePropagation();if(name.value.trim())go.click();else name.focus()}},true);
-const oldRender=window.render;window.render=function(){if(oldRender)oldRender();if(!window.radio||!radio.name){ptt.textContent="POWER ON";ptt.className="";$("st").textContent="READY TO JOIN"}else if(!holding&&!granted&&!(radio.floor&&radio.floor.id!==radio.id))ptt.textContent="HOLD TO TALK"};
+const oldRender=window.render;window.render=function(){if(oldRender)oldRender();if(!window.radio||!radio.name){ptt.textContent="POWER ON FIRST";ptt.className="";$("st").textContent="POWER OFF"}else if(!holding&&!granted&&!(radio.floor&&radio.floor.id!==radio.id))ptt.textContent="HOLD TO TALK"};
 const powerBtn=$("radioPower"),powerText=$("radioPowerText");
+let radioPowered=false;
 function setRadioPower(on){
- powerBtn.classList.toggle("is-on",on);powerBtn.setAttribute("aria-pressed",String(on));powerBtn.setAttribute("aria-label",on?"Power off radio":"Power on radio");powerText.textContent=on?"ON":"OFF";
- if(ledPwr)ledPwr.classList.toggle("on",on);
- ptt.disabled=!on;ptt.setAttribute("aria-disabled",String(!on));ptt.textContent=on?"HOLD TO TALK":"RADIO OFF";
- $("st").textContent=on?"STANDBY":"POWER OFF";
+ radioPowered=!!on;
+ powerBtn.classList.toggle("is-on",radioPowered);powerBtn.setAttribute("aria-pressed",String(radioPowered));powerBtn.setAttribute("aria-label",radioPowered?"Power off radio":"Power on radio");powerText.textContent=radioPowered?"ON":"OFF";
+ if(ledPwr)ledPwr.classList.toggle("on",radioPowered);
+ if(meterPanel)meterPanel.style.display=radioPowered?"block":"none";
+ ptt.disabled=!radioPowered;ptt.setAttribute("aria-disabled",String(!radioPowered));ptt.textContent=radioPowered?"HOLD TO TALK":"POWER ON FIRST";
+ $("st").textContent=radioPowered?"STANDBY":"POWER OFF";
 }
-powerBtn.addEventListener("click",async()=>{
- if(!window.radio||!radio.name){
+function stopMic(){
+ try{if(proc){proc.disconnect();proc.onaudioprocess=null;proc=null}}catch(e){}
+ try{if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}catch(e){}
+ try{if(ac&&ac.state!=="closed")ac.close()}catch(e){}
+ granted=false;holding=false;sstvTx=false;
+}
+powerBtn.addEventListener("click",()=>{
+ if(powerBtn.disabled)return;
+ if(!radioPowered){
   if(!name.value.trim()){name.focus();$("st").textContent="ENTER CALL SIGN";return}
   powerBtn.disabled=true;powerText.textContent="STARTING";
-  try{go.click();setTimeout(()=>{const on=!!(window.radio&&radio.name);setRadioPower(on);powerBtn.disabled=false},900)}
+  try{go.click();setTimeout(()=>{const joined=!!(window.radio&&radio.name);setRadioPower(joined);powerBtn.disabled=false;if(joined)ptt.textContent="HOLD TO TALK"},1200)}
   catch(e){powerBtn.disabled=false;setRadioPower(false)}
  }else{
-  try{radio.leave()}catch(e){}radio=null;
-  try{if(proc){proc.disconnect();proc.onaudioprocess=null;proc=null}}catch(e){}
-  try{if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}catch(e){}
-  try{if(ac&&ac.state!=="closed")ac.close()}catch(e){}
-  granted=false;holding=false;sstvTx=false;try{start()}catch(e){}
+  try{if(window.radio&&radio.name)radio.leave()}catch(e){}
+  stopMic();try{start()}catch(e){}
   setRadioPower(false);
  }
 });
-
+// PTT is transmit-only. When the radio is off it displays POWER ON FIRST.
+ptt.addEventListener("pointerdown",e=>{if(!radioPowered||!window.radio||!radio.name){e.preventDefault();e.stopImmediatePropagation()}},true);
+ptt.addEventListener("click",e=>{if(!radioPowered||!window.radio||!radio.name){e.preventDefault();e.stopImmediatePropagation()}},true);
+setRadioPower(false);
 let asr=null,asrLoading=null,queue=Promise.resolve();const done=new Set(),texts=new Map();
 async function loadWhisper(){if(asr)return asr;if(asrLoading)return asrLoading;$("whisperState").textContent="WHISPER · LOADING";asrLoading=import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.5").then(T=>T.pipeline("automatic-speech-recognition","onnx-community/whisper-base",{dtype:"q8"})).then(p=>{asr=p;$("whisperState").textContent="WHISPER · ON DEVICE";return p}).catch(e=>{$("whisperState").textContent="WHISPER · UNAVAILABLE";throw e});return asrLoading}
 const sqlInput=$("simpleSquelchLevel");if(sqlInput){sqlInput.value=localStorage.getItem("sanketptt.squelch")||"0";$("simpleSquelchValue").textContent=sqlInput.value;sqlInput.oninput=()=>{$("simpleSquelchValue").textContent=sqlInput.value;localStorage.setItem("sanketptt.squelch",sqlInput.value)}}
@@ -123,8 +137,7 @@ if(window.rec){rec.onChange=entries=>{renderLog(entries);drawMessages(entries)};
 let fmWasPlaying=false,busy=false;function pauseFm(){if(audio&&!audio.paused){fmWasPlaying=true;audio.pause()}}
 const oldDown=window.down;if(oldDown)window.down=function(e){pauseFm();return oldDown(e)};
 setInterval(()=>{if(!window.radio)return;const f=radio.floor,active=!!(f&&(f.id!==radio.id||radio.talking));if(active&&!busy)pauseFm();if(!active&&busy&&fmWasPlaying&&audio){fmWasPlaying=false;audio.play().catch(()=>{})}busy=active},180);
-if(auto.checked){if(!name.value)name.value=localStorage.getItem("nm")||"SANKET AUTO";setTimeout(()=>{if(window.radio&&!radio.name&&localStorage.getItem("sanketptt.autoPower")!=="off")go.click()},8000)}
+
 if(typeof window.render==="function")window.render();
-setRadioPower(!!(window.radio&&radio.name));
-setInterval(()=>{const powered=!!(window.radio&&radio.name);if(powerBtn&&!powerBtn.disabled&&powerBtn.classList.contains("is-on")!==powered)setRadioPower(powered);if(powered&&!holding&&!granted&&!(radio.floor&&radio.floor.id!==radio.id))ptt.textContent="HOLD TO TALK"},500);
+setInterval(()=>{const powered=!!(window.radio&&radio.name);if(powerBtn&&!powerBtn.disabled&&radioPowered&&!powered)setRadioPower(false);if(powered&&radioPowered&&!holding&&!granted&&!(radio.floor&&radio.floor.id!==radio.id))ptt.textContent="HOLD TO TALK"},500);
 })();
