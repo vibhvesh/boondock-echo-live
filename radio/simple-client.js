@@ -12,6 +12,7 @@ $("simpleSkin").onchange=()=>{try{const u=new URL(window.parent.location.href);u
 $("simpleChannelName").textContent=(channels.find(x=>x[0]===ch)||channels[0])[1];
 $("simpleClose").onclick=()=>{try{radio&&radio.leave()}catch(e){}try{window.top.close()}catch(e){}setTimeout(()=>{try{window.top.location.replace("/boondock-echo-live/")}catch(e){history.back()}},150)};
 const login=$("login"),name=$("nm"),go=$("go"),main=$("main"),ptt=$("ptt");
+ptt.textContent="POWER ON";ptt.setAttribute("aria-label","Power on and join radio channel");
 login.style.display="none";go.style.display="none";main.style.display="block";main.insertBefore(name,main.firstChild);name.placeholder="Call sign";name.setAttribute("aria-label","Call sign");$("hd").style.display="none";
 const more=document.createElement("button");more.id="simpleMore";more.textContent="MORE ⋯";const drawer=document.createElement("div");drawer.id="simpleMoreDrawer";drawer.innerHTML='<div class="more-head"><b>RADIO OPTIONS</b><button id="moreClose">×</button></div><label>CHANNEL<select id="simpleChannel"></select></label><label class="auto-row">AUTO POWER ON <input id="simpleAutoPower" type="checkbox"></label><button id="simpleSstv">SSTV IMAGE</button><small>FM pauses automatically during PTT.</small>';
 rig.append(more,drawer);
@@ -70,7 +71,7 @@ const style=document.createElement("style");style.id="simpleRadioStyles";style.t
 if(sstvFile)sstvFile.addEventListener("change",()=>{if(sstvFile.files&&sstvFile.files.length){sstv.classList.add("open");drawer.classList.remove("open")}});
 $("sstvCancel")?.addEventListener("click",()=>sstv.classList.remove("open"));
 ptt.addEventListener("pointerdown",e=>{if(!window.radio||!radio.name){e.preventDefault();e.stopImmediatePropagation();if(!name.value.trim()){name.focus();return}go.click()}},true);
-ptt.addEventListener("click",e=>{if(!window.radio||!radio.name){e.preventDefault();if(name.value.trim())go.click()}});
+ptt.addEventListener("click",e=>{if(!window.radio||!radio.name){e.preventDefault();e.stopImmediatePropagation();if(name.value.trim())go.click();else name.focus()}},true);
 const oldRender=window.render;window.render=function(){if(oldRender)oldRender();if(!window.radio||!radio.name){ptt.textContent="POWER ON";ptt.className="";$("st").textContent="READY TO JOIN"}else if(!holding&&!granted&&!(radio.floor&&radio.floor.id!==radio.id))ptt.textContent="HOLD TO TALK"};
 let asr=null,asrLoading=null,queue=Promise.resolve();const done=new Set(),texts=new Map();
 async function loadWhisper(){if(asr)return asr;if(asrLoading)return asrLoading;$("whisperState").textContent="WHISPER · LOADING";asrLoading=import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.5").then(T=>T.pipeline("automatic-speech-recognition","onnx-community/whisper-base",{dtype:"q8"})).then(p=>{asr=p;$("whisperState").textContent="WHISPER · ON DEVICE";return p}).catch(e=>{$("whisperState").textContent="WHISPER · UNAVAILABLE";throw e});return asrLoading}
@@ -81,5 +82,6 @@ let fmWasPlaying=false,busy=false;function pauseFm(){if(audio&&!audio.paused){fm
 const oldDown=window.down;if(oldDown)window.down=function(e){pauseFm();return oldDown(e)};
 setInterval(()=>{if(!window.radio)return;const f=radio.floor,active=!!(f&&(f.id!==radio.id||radio.talking));if(active&&!busy)pauseFm();if(!active&&busy&&fmWasPlaying&&audio){fmWasPlaying=false;audio.play().catch(()=>{})}busy=active},180);
 if(auto.checked){if(!name.value)name.value=localStorage.getItem("nm")||"SANKET AUTO";setTimeout(()=>{if(window.radio&&!radio.name&&localStorage.getItem("sanketptt.autoPower")!=="off")go.click()},8000)}
+if(typeof window.render==="function")window.render();
 setInterval(()=>{if(window.radio&&radio.name&&!holding&&!granted&&!(radio.floor&&radio.floor.id!==radio.id))ptt.textContent="HOLD TO TALK"},500);
 })();
