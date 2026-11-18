@@ -39,7 +39,7 @@
     .rig{max-width:520px!important;margin:0 auto!important;background:linear-gradient(145deg,${t.frame},#101318)!important;border:3px solid ${t.edge}!important;border-radius:${t.radius}!important;box-shadow:0 18px 42px #000b,inset 0 2px 0 #ffffff22!important;padding:16px!important}
     .brand h1{background:none!important;color:${t.accent}!important;-webkit-text-fill-color:${t.accent}!important;letter-spacing:1.5px!important}
     .brand small{color:#aeb8c4!important}
-    .led.pw i{background:#f5bd28!important;box-shadow:0 0 10px #f5bd28!important}
+    .led.pw i{background:#333!important;box-shadow:inset 0 1px 3px #000!important}.led.pw.on i{background:#f5bd28!important;box-shadow:0 0 10px #f5bd28!important}
     .lcd{background:linear-gradient(180deg,${t.lcd},${t.screen})!important;color:${t.screen}!important;border:3px solid #080b0d!important;box-shadow:inset 0 0 18px #000b,0 0 15px ${t.glow}!important;text-shadow:0 0 7px ${t.accent}!important}
     .lcd .row{color:inherit!important}
     .freq{color:inherit!important}
@@ -73,10 +73,10 @@
     #ptt{position:relative;z-index:3;width:min(76vw,285px)!important;height:min(76vw,285px)!important;border-radius:50%!important;background:radial-gradient(circle at 35% 25%,#ffb18c,#df4a22 48%,#7e1b0c)!important;border:7px solid #52180f!important;box-shadow:0 0 0 3px #f1d3c3,0 9px 20px #310d08aa,inset 0 -10px 15px #4a100a99!important}
     #ptt.on{background:radial-gradient(circle at 35% 25%,#ffc4b9,#ed3024 48%,#7d0909)!important}
     #ptt.busy{background:radial-gradient(circle at 35% 25%,#fff0a6,#dc9a25 48%,#75400c)!important}
-    #boondockLteIndicators{position:relative;z-index:3;display:flex;flex-direction:column;align-items:flex-end;gap:10px;width:max-content;margin:8px 22px 8px auto;flex-wrap:nowrap}
-    #boondockLteIndicators .lte-indicator{display:flex;align-items:center;justify-content:space-between;gap:18px;width:88px;padding:0;border:0;border-radius:0;background:transparent;color:#f7e5dc;font:800 9px Arial,sans-serif;letter-spacing:.7px}#boondockLteIndicators .lte-indicator span:last-child{display:none}
-    #boondockLteIndicators .lte-dot{width:18px;height:18px;border-radius:50%;background:#f0dfd6;box-shadow:inset 0 -2px 3px #a78b80,0 0 0 2px #f7d6c4}
-    #boondockLteIndicators svg{width:19px;height:19px;stroke:#f7dfd4;fill:none;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
+    #boondockLteIndicators{position:relative;z-index:3;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:12px;width:100%;margin:6px auto;flex-wrap:nowrap}
+    #boondockLteIndicators .lte-indicator{display:flex;align-items:center;justify-content:center;gap:8px;min-width:82px;padding:0;border:0;border-radius:0;background:transparent;color:#f7e5dc;font:800 9px Arial,sans-serif;letter-spacing:.7px}
+    #boondockLteIndicators .lte-dot{display:none}
+    #boondockLteIndicators svg{display:none}#boondockLteIndicators .status-led{display:flex;flex-direction:row;align-items:center;gap:7px;min-width:70px;padding:8px 12px;border:1px solid #f0cbbb;border-radius:9px;background:linear-gradient(#42170f,#1d0b08);color:#f7e5dc;font:900 11px Arial;letter-spacing:1px;box-shadow:inset 0 1px 2px #ffffff22,0 2px 6px #0008}#boondockLteIndicators .status-led i{width:10px;height:10px;border-radius:50%;background:#292929;box-shadow:inset 0 1px 3px #000}#boondockLteIndicators .status-led.rx.on{color:#c9ffe0;border-color:#45ed8a}#boondockLteIndicators .status-led.rx.on i{background:#45ed8a;box-shadow:0 0 10px #45ed8a}#boondockLteIndicators .status-led.tx.on{color:#ffd1ce;border-color:#ff514b}#boondockLteIndicators .status-led.tx.on i{background:#ff514b;box-shadow:0 0 10px #ff514b}
     #clientControls{position:relative;z-index:3}
     #net{position:relative;z-index:3;color:#f3d4c7!important}
     ` : ""}
@@ -94,7 +94,10 @@
           indicators.id = "boondockLteIndicators";
           const heading = brand.querySelector("h1"); if (heading) heading.textContent = "BOONDOCK ECHO";
           const subheading = brand.querySelector("small"); if (subheading) subheading.textContent = "LTE COMMUNICATIONS";
-          indicators.innerHTML = '<div class="lte-indicator"><span class="lte-dot"></span><svg viewBox="0 0 24 24"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0M12 19h.01"/></svg><span>WI-FI</span></div><div class="lte-indicator"><span class="lte-dot"></span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M7 7a7 7 0 0 0 0 10M17 7a7 7 0 0 1 0 10M3.5 3.5a12 12 0 0 0 0 17M20.5 3.5a12 12 0 0 1 0 17"/></svg><span>LTE</span></div><div class="lte-indicator"><span class="lte-dot"></span><svg viewBox="0 0 24 24"><path d="M20 7v5a8 8 0 1 1-3-6M8 11l3 3 10-10"/></svg><span>LINK OK</span></div>';
+          indicators.innerHTML = '<div class="lte-indicator rx-slot">RX</div><div class="lte-indicator tx-slot">TX</div>';
+          const rxButton = doc.getElementById("ledrx"), txButton = doc.getElementById("ledtx");
+          if (rxButton) { rxButton.innerHTML = "<i></i><span>RX</span>"; rxButton.setAttribute("aria-label","Receive activity"); indicators.querySelector(".rx-slot").appendChild(rxButton); }
+          if (txButton) { txButton.innerHTML = "<i></i><span>TX</span>"; txButton.setAttribute("aria-label","Transmit activity"); indicators.querySelector(".tx-slot").appendChild(txButton); }
           brand.after(indicators);
         }
       }
