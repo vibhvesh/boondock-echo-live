@@ -250,10 +250,14 @@
  window.sanketImportRadioDirectory=async function(sourceUrl){
   const url=String(sourceUrl||"").trim();
   if(!/^https:\/\//i.test(url))throw new Error("Please use a public HTTPS directory or playlist URL.");
-  const response=await fetch(url,{mode:"cors",cache:"no-store"});
-  if(!response.ok)throw new Error("Directory returned HTTP "+response.status);
-  const raw=await response.text();
-  let rows=[];
+  let raw="",rows=[];
+  if(/\\.(?:m3u8?|mp3|aac|ogg)(?:$|[?#])/i.test(url)){
+   rows=[{name:new URL(url).hostname+" radio",url:url}];
+  }else{
+   const response=await fetch(url,{mode:"cors",cache:"no-store"});
+   if(!response.ok)throw new Error("Directory returned HTTP "+response.status);
+   raw=await response.text();
+  }
   try{
    const data=JSON.parse(raw);
    rows=Array.isArray(data)?data:(data.stations||data.data||data.items||[]);
