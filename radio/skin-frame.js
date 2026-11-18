@@ -44,7 +44,7 @@
     .panel h3{color:${t.accent}!important}
     input{border-color:${t.edge}99!important}
     #go{background:linear-gradient(135deg,#50c878,${t.accent})!important;box-shadow:0 4px 0 #111!important}
-    #ptt{background:radial-gradient(circle at 35% 28%,${t.ptt2},${t.ptt} 70%)!important;border:5px solid #080b0d!important;box-shadow:0 0 0 3px ${t.edge},0 0 24px ${t.glow},inset 0 -8px 16px #0008!important}
+    #ptt{width:min(74vw,285px)!important;height:min(74vw,285px)!important;max-width:285px!important;max-height:285px!important;aspect-ratio:1/1!important;border-radius:50%!important;background:radial-gradient(circle at 35% 28%,${t.ptt2},${t.ptt} 70%)!important;border:5px solid #080b0d!important;box-shadow:0 0 0 3px ${t.edge},0 0 24px ${t.glow},inset 0 -8px 16px #0008!important}
     #ptt.on{background:radial-gradient(circle at 35% 28%,#ff7770,#b30000 70%)!important;box-shadow:0 0 0 3px #ff3b30,0 0 36px #ff3020!important}
     #ptt.busy{background:radial-gradient(circle at 35% 28%,#ffe39a,#b36a00 70%)!important}
     #log li .cs{color:${t.accent}!important}
@@ -55,7 +55,7 @@
     ${skin === "hytera" ? ".lcd{border-radius:7px!important}.freq{letter-spacing:1px!important}.rig{box-shadow:0 0 0 4px #151a17,0 18px 42px #000b!important}" : ""}
     ${skin === "kenwood" ? ".lcd{border-radius:5px!important}.freq{font-family:Arial,sans-serif!important;letter-spacing:2px!important}.rig{border-radius:12px!important}" : ""}
     ${skin === "baofeng" ? ".lcd{border-radius:3px!important;text-shadow:none!important}.freq{font-family:'Share Tech Mono',monospace!important}.panel h3{letter-spacing:1px!important}" : ""}
-    ${skin === "sonim" ? ".rig{border:6px solid #d6aa26!important;box-shadow:0 0 0 3px #111,0 18px 42px #000c!important}.panel{border-radius:18px!important}#ptt{border-radius:18px!important;width:min(68vw,245px)!important;height:94px!important}" : ""}
+    ${skin === "sonim" ? ".rig{border:6px solid #d6aa26!important;box-shadow:0 0 0 3px #111,0 18px 42px #000c!important}.panel{border-radius:18px!important}#ptt{border-radius:50%!important;width:min(74vw,285px)!important;height:min(74vw,285px)!important;max-width:285px!important;max-height:285px!important;aspect-ratio:1/1!important}" : ""}
   `;
   function apply() {
     try {
