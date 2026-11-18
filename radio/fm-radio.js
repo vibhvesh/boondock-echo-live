@@ -147,7 +147,7 @@
   dial.max=Math.max(0,visibleStations.length-1);dial.value=ix;
   bandLabel.textContent=activeBand==="ALL"?"ALL INTERNET RADIO STREAMS":activeBand+" BAND";
   $("tuneDown").disabled=$("tuneUp").disabled=$("scanDown").disabled=$("scanUp").disabled=!visibleStations.length;
-  if(!visibleStations.length){freq.textContent=activeBand==="AM"?"AM — NO FEEDS":"SW — NO FEEDS";tunerName.textContent="No verified "+activeBand+" stream source loaded";favBtn.textContent="☆ SAVE";return}
+  if(!visibleStations.length){freq.textContent=activeBand==="AM"?"AM — NO FEEDS":"SW — NO FEEDS";tunerName.textContent="No verified "+activeBand+" stream source loaded";favBtn.textContent="☆ SAVE";favBtn.disabled=true;return}favBtn.disabled=false;
   const n=ix+1;freq.textContent=activeBand==="FM"?(87.5+((n-1)*0.2)%20).toFixed(1)+" MHz":"CH "+String(n).padStart(2,"0");
   tunerName.textContent=stations[visibleStations[ix]].name;
   updateFavorite();
@@ -160,7 +160,7 @@
  $("tuneDown").addEventListener("click",()=>stepTune(-1,false));$("tuneUp").addEventListener("click",()=>stepTune(1,false));
  $("scanDown").addEventListener("click",()=>scanBand(-1));$("scanUp").addEventListener("click",()=>scanBand(1));
  dial.addEventListener("input",()=>{if(visibleStations[+dial.value])chooseStation(visibleStations[+dial.value],false)});
- favBtn.addEventListener("click",()=>{let f=[];try{f=JSON.parse(localStorage.getItem("sanketRadioFavorites")||"[]")}catch(e){}if(f.includes(select.value))f=f.filter(x=>x!==select.value);else f.push(select.value);localStorage.setItem("sanketRadioFavorites",JSON.stringify(f));updateFavorite();say((f.includes(select.value)?"Saved ":"Removed ")+stations[select.value].name+(f.includes(select.value)?" to favorites":" from favorites"))});
+ favBtn.addEventListener("click",()=>{if(!select.value||!stations[select.value])return;let f=[];try{f=JSON.parse(localStorage.getItem("sanketRadioFavorites")||"[]")}catch(e){}if(f.includes(select.value))f=f.filter(x=>x!==select.value);else f.push(select.value);localStorage.setItem("sanketRadioFavorites",JSON.stringify(f));updateFavorite();say((f.includes(select.value)?"Saved ":"Removed ")+stations[select.value].name+(f.includes(select.value)?" to favorites":" from favorites"))});
  try{const last=localStorage.getItem("sanketRadioLastStation");if(last&&stations[last])select.value=last}catch(e){}
  refreshTuner();
 
@@ -205,11 +205,11 @@
   say("Scan complete: no playable stream found in "+activeBand+". Try another band or scan later.");scanBusy=false;
  }
  function stopBridge(){
-  bridging=false;
+  const wasActive=bridging||!!bot;bridging=false;
   if(processor)processor.onaudioprocess=null;
   if(bot){try{bot.leave()}catch(e){}bot=null}
   $("radioBridgeBtn").disabled=!window.radioPowered;$("radioBridgeStopBtn").disabled=true;
-  say("Radio bridge stopped. PTT has priority; radio playback remains local.");
+  if(wasActive)say("Radio bridge stopped. PTT has priority; FM playback remains local.");
  }
  window.__sanketRadioPreempt=function(claimPTT){
   if(bridging||bot){stopBridge();setTimeout(claimPTT,220)}else claimPTT();
