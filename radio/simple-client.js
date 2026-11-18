@@ -111,20 +111,22 @@ function stopMic(){
  try{if(ac&&ac.state!=="closed")ac.close()}catch(e){}
  granted=false;holding=false;sstvTx=false;
 }
-powerBtn.addEventListener("click",()=>{
+powerBtn.addEventListener("click",async()=>{
  if(powerBtn.disabled)return;
  if(!radioPowered){
   if(!name.value.trim()){name.focus();$("st").textContent="ENTER CALL SIGN";return}
-  powerBtn.disabled=true;powerText.textContent="STARTING";
+  powerBtn.disabled=true;powerText.textContent="ALLOW MIC";
   try{
-   // Invoke the existing join routine directly. The hidden legacy Join button
-   // is not relied on for a mobile click event.
-   const pending=go.onclick.call(go);
-   if(window.radio&&radio.name){setRadioPower(true);$("st").textContent="CONNECTED · STANDBY"}
-   else{setRadioPower(false);$("st").textContent="JOIN FAILED · CHECK CALL SIGN"}
-   if(pending&&typeof pending.catch==="function")pending.catch(e=>{$("st").textContent="MIC ERROR · LISTEN ONLY";});
-  }catch(e){setRadioPower(false);$("st").textContent="POWER ON FAILED"}
-  powerBtn.disabled=false;
+   // go.onclick now requests the microphone first and joins only after permission succeeds.
+   await go.onclick.call(go);
+   if(window.radio&&radio.name){setRadioPower(true);$("st").textContent="RADIO ON · JOINING CHANNEL"}
+   else{setRadioPower(false);$("st").textContent="RADIO DID NOT JOIN"}
+  }catch(e){
+   setRadioPower(false);
+   const denied=e&&(["NotAllowedError","PermissionDeniedError","SecurityError"].includes(e.name));
+   $("st").textContent=denied?"MIC PERMISSION REQUIRED":"MICROPHONE UNAVAILABLE";
+   if(denied)alert("Microphone permission is required to power on Boondock Echo. Allow microphone access in your browser, then press POWER ON again.");
+  }finally{powerBtn.disabled=false}
  }else{
   try{if(window.radio&&radio.name)radio.leave()}catch(e){}
   stopMic();try{start()}catch(e){}
@@ -136,6 +138,22 @@ ptt.addEventListener("pointerdown",e=>{if(!radioPowered||!window.radio||!radio.n
 ptt.addEventListener("click",e=>{if(!radioPowered||!window.radio||!radio.name){e.preventDefault();e.stopImmediatePropagation()}},true);
 window.addEventListener("keydown",e=>{if(e.code==="Space"&&!radioPowered){e.preventDefault();e.stopImmediatePropagation()}},true);
 setRadioPower(false);
+// First-run permission gate: auto-start only when the browser already reports
+// microphone permission as granted. Prompt/denied states remain OFF until the
+// user presses the physical-style POWER button and grants access.
+(async()=>{
+ if(!auto.checked||!name.value.trim())return;
+ if(!navigator.permissions||!navigator.permissions.query){$("st").textContent="MIC PERMISSION CHECK · PRESS POWER";return}
+ try{
+  const permission=await navigator.permissions.query({name:"microphone"});
+  if(permission.state!=="granted"){$("st").textContent=permission.state==="denied"?"MIC BLOCKED · CHECK BROWSER SETTINGS":"MIC PERMISSION NEEDED · PRESS POWER";return}
+  if(radioPowered||powerBtn.disabled)return;
+  powerBtn.disabled=true;powerText.textContent="STARTING";
+  try{await go.onclick.call(go);if(window.radio&&radio.name){setRadioPower(true);$("st").textContent="RADIO ON · JOINING CHANNEL"}else{setRadioPower(false);$("st").textContent="RADIO JOIN FAILED"}}
+  catch(e){setRadioPower(false);$("st").textContent="MIC UNAVAILABLE · PRESS POWER"}
+  finally{powerBtn.disabled=false}
+ }catch(e){$("st").textContent="MIC PERMISSION CHECK · PRESS POWER"}
+})();
 let asr=null,asrLoading=null,queue=Promise.resolve();const done=new Set(),texts=new Map();
 async function loadWhisper(){if(asr)return asr;if(asrLoading)return asrLoading;$("whisperState").textContent="WHISPER · LOADING";asrLoading=import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.5").then(T=>T.pipeline("automatic-speech-recognition","onnx-community/whisper-base",{dtype:"q8"})).then(p=>{asr=p;$("whisperState").textContent="WHISPER · ON DEVICE";return p}).catch(e=>{$("whisperState").textContent="WHISPER · UNAVAILABLE";throw e});return asrLoading}
 const sqlInput=$("simpleSquelchLevel");if(sqlInput){sqlInput.value=localStorage.getItem("sanketptt.squelch")||"0";$("simpleSquelchValue").textContent=sqlInput.value;sqlInput.oninput=()=>{$("simpleSquelchValue").textContent=sqlInput.value;localStorage.setItem("sanketptt.squelch",sqlInput.value)}}
