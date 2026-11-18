@@ -51,6 +51,7 @@ const fmHead=fm.querySelector("h3"),fmClose=document.createElement("button");fmC
 function closeFmPanel(){fm.classList.remove("open");fmBtn.textContent="FM RADIO";fmBtn.setAttribute("aria-expanded","false");}
 fmBtn.onclick=()=>{drawer.classList.remove("open");const open=!fm.classList.contains("open");fm.classList.toggle("open",open);fmBtn.textContent=open?"CLOSE FM":"FM RADIO";fmBtn.setAttribute("aria-expanded",String(open))};
 fmClose.onclick=closeFmPanel;
+$("radioStationSelect").addEventListener("change",()=>{if($("radioStationSelect").value)closeFmPanel()});$("radioStationButtons").addEventListener("click",e=>{if(e.target.closest("button"))closeFmPanel()});
 
 document.querySelector(".panel:has(#us)")?.remove();$("locp")?.remove();const logPanel=$("log")?.closest(".panel");if(logPanel)logPanel.style.display="none";
 const messages=document.createElement("section");messages.id="simpleMessages";messages.innerHTML='<div class="ribbon-head">LAST FIVE AUDIO MESSAGES</div><div id="recentAudioRibbons"><small>Waiting for radio traffic</small></div><div class="transcript-head"><b>MESSAGE HISTORY · NEWEST AT BOTTOM</b><span id="whisperState">WHISPER · AUTO</span></div><div id="simpleTranscriptList"><small>Your sent and received messages will appear here</small></div><div id="simpleSstvGallery"><div class="transcript-head"><b>SSTV PICTURES</b><span>LOCAL & RECEIVED</span></div></div>';main.after(messages);$("simpleSstvGallery").appendChild($("sstvList"));
