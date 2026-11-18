@@ -17,7 +17,7 @@ $("simpleSkin").onchange=()=>{try{const u=new URL(window.parent.location.href);u
 $("simpleChannelName").textContent=(channels.find(x=>x[0]===ch)||channels[0])[1];
 $("simpleClose").onclick=()=>{try{radio&&radio.leave()}catch(e){}try{window.top.close()}catch(e){}setTimeout(()=>{try{window.top.location.replace("/boondock-echo-live/")}catch(e){history.back()}},150)};
 const login=$("login"),name=$("nm"),go=$("go"),main=$("main"),ptt=$("ptt");
-const meterPanel=document.querySelector(".lcd .meter");
+const meterPanel=document.querySelector(".lcd .meter"),unlockButton=$("unlock");
 if(meterPanel&&!$("simpleSquelch")){const sq=document.createElement("div");sq.id="simpleSquelch";sq.innerHTML='<label for="simpleSquelchLevel">SQUELCH <span id="simpleSquelchValue">0</span></label><input id="simpleSquelchLevel" type="range" min="0" max="40" step="1" value="0" aria-label="Squelch level">';meterPanel.appendChild(sq)}
 
 ptt.textContent="POWER ON FIRST";ptt.setAttribute("aria-label","Power on the radio using the top-left switch before transmitting");
@@ -115,7 +115,7 @@ async function powerOnRadio(){
  if(!name.value.trim()){name.focus();$("st").textContent="ENTER CALL SIGN";return false}
  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error("MICROPHONE_API_UNAVAILABLE");
  $("st").textContent="REQUESTING MICROPHONE";
- const callSign=fmtCS(name.value);name.value=callSign;localStorage.nm=callSign;
+ const callSign=window.fmtCS(name.value);name.value=callSign;localStorage.nm=callSign;
  // This is the only place that requests microphone permission and joins.
  stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
  if(!stream||!stream.getAudioTracks().some(t=>t.readyState==="live"))throw new Error("NO_LIVE_MICROPHONE_TRACK");
@@ -124,24 +124,24 @@ async function powerOnRadio(){
  ac=new AudioCtor();
  await ac.resume();
  try{unlockAudio()}catch(e){}
- startLoc();
- login.style.display="none";main.style.display="block";
- $("hd").textContent="#"+radio.ch+" — "+callSign;
- if(!radio||radio.closed)start();
- radio.join(callSign);
+ try{if(typeof window.startLoc==="function")window.startLoc()}catch(locError){console.warn("Location startup skipped:",locError)}
+ $("login").style.display="none";$("main").style.display="block";
+ $("hd").textContent="#"+window.radio.ch+" — "+callSign;
+ if(!window.radio||window.radio.closed)window.start();
+ window.radio.join(callSign);
  const source=ac.createMediaStreamSource(stream);
  proc=ac.createScriptProcessor(4096,1,1);
  const mute=ac.createGain();mute.gain.value=0;
  source.connect(proc);proc.connect(mute);mute.connect(ac.destination);
  proc.onaudioprocess=function(e){
-  if(!granted||sstvTx||!radio||!radio.name)return;
+  if(!granted||window.sstvTx||!window.radio||!window.radio.name)return;
   const input=e.inputBuffer.getChannelData(0),ratio=ac.sampleRate/RATE,count=Math.floor(input.length/ratio),out=new Int16Array(count);
   for(let k=0;k<count;k++)out[k]=Math.max(-1,Math.min(1,input[Math.floor(k*ratio)]))*32767;
-  if(radio.sendAudio(out)){txLvl=Math.max(txLvl,lvl(out));rec.feed(radio.id,radio.name,out,true,undefined,radio.loc)}
+  if(window.radio.sendAudio(out)){window.txLvl=Math.max(window.txLvl,window.lvl(out));window.rec.feed(window.radio.id,window.radio.name,out,true,undefined,window.radio.loc)}
  };
- setInterval(function(){if(ac&&ac.state!=="closed")unlock.style.display=ac.state==="running"?"none":"block"},1000);
+ setInterval(function(){if(window.ac&&window.ac.state!=="closed"&&unlockButton)unlockButton.style.display=window.ac.state==="running"?"none":"block"},1000);
  render();
- return !!(radio&&radio.name===callSign);
+ return !!(window.radio&&window.radio.name===callSign);
 }
 powerBtn.addEventListener("click",async()=>{
  if(powerBtn.disabled)return;
@@ -153,7 +153,7 @@ powerBtn.addEventListener("click",async()=>{
    setRadioPower(true);$("st").textContent="RADIO ON · "+radio.ch.toUpperCase();
   }catch(e){
    stopMic();setRadioPower(false);
-   const msg=e&&e.name?e.name:String(e);
+   const msg=e&&e.message?e.message:(e&&e.name?e.name:String(e));
    $("st").textContent=msg==="NotAllowedError"||msg==="PermissionDeniedError"?"MIC PERMISSION DENIED":msg==="NotFoundError"?"NO MICROPHONE FOUND":"POWER ON FAILED";
    console.error("Boondock radio power-on failed:",e);
    alert("Boondock Echo could not power on: "+msg+". Check microphone permission for this site and try again.");
