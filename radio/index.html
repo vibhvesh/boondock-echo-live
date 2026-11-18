@@ -279,7 +279,7 @@ var NB=20;bars.innerHTML=new Array(NB+1).join('<b></b>');var barEls=bars.childre
 function lvl(a){var m=0;for(var i=0;i<a.length;i+=4){var x=Math.abs(a[i]);if(x>m)m=x}return Math.min(1,Math.sqrt(m/32768)*1.2)}
 function meterLoop(){var v=granted?txLvl:(Date.now()-rxAt<300?rxLvl:0);txLvl*=.85;rxLvl*=.9;var k=Math.round(v*NB);
  for(var i=0;i<NB;i++)barEls[i].className=i<k?('l'+(i>=NB*.85?' r':i>=NB*.6?' y':'')):'';
- ledtx.classList.toggle('on',granted);ledrx.classList.toggle('on',Date.now()-rxAt<400);requestAnimationFrame(meterLoop)}meterLoop();
+ ledtx.classList.toggle('on',!!(window.radioPowered&&granted));ledrx.classList.toggle('on',!!(window.radioPowered&&Date.now()-rxAt<400));if(ledtx.setAttribute)ledtx.setAttribute('aria-pressed',String(!!(window.radioPowered&&granted)));if(ledrx.setAttribute)ledrx.setAttribute('aria-pressed',String(!!(window.radioPowered&&Date.now()-rxAt<400)));requestAnimationFrame(meterLoop)}meterLoop();
 var rec=new Recorder(RATE,renderLog),player=null,playingKey=null;
 setInterval(function(){rec.tick()},500);
 function fmtD(s){return s<60?s.toFixed(1)+'s':Math.floor(s/60)+'m'+('0'+Math.round(s%60)).slice(-2)+'s'}
@@ -385,5 +385,5 @@ sstvSend.onclick=function(){if(sstvTx)return;var f=radio.floor;if(f&&f.id!==radi
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script src="fm-radio.js"></script>
 <script src="client-options.js"></script>
-<script src="simple-client.js?v=45e53d1d"></script>
+<script src="simple-client.js?v=ed14d179"></script>
 </body></html>
