@@ -141,11 +141,10 @@ setRadioPower(false);
 // If the browser can prompt, getUserMedia asks once and continues after Allow.
 (async()=>{
  if(!auto.checked||!name.value.trim())return;
+ let permissionState="prompt";
+ try{if(navigator.permissions&&navigator.permissions.query){const permission=await navigator.permissions.query({name:"microphone"});permissionState=permission.state||"prompt"}}catch(permissionCheckError){console.warn("Microphone permission query unavailable; using getUserMedia prompt",permissionCheckError)}
+ if(permissionState==="denied"){$("st").textContent="MIC BLOCKED · ENABLE IN SITE SETTINGS";return}
  try{
-  if(navigator.permissions&&navigator.permissions.query){
-   const permission=await navigator.permissions.query({name:"microphone"});
-   if(permission.state==="denied"){$("st").textContent="MIC BLOCKED · ENABLE IN SITE SETTINGS";return}
-  }
   if(radioPowered||powerBtn.disabled)return;
   powerBtn.disabled=true;powerText.textContent="STARTING";
   // If permission is already granted this continues silently; if it is prompt,
