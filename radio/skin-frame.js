@@ -61,7 +61,7 @@
     ${skin === "kenwood" ? ".lcd{border-radius:5px!important}.freq{font-family:Arial,sans-serif!important;letter-spacing:2px!important}.rig{border-radius:12px!important}" : ""}
     ${skin === "baofeng" ? ".lcd{border-radius:3px!important;text-shadow:none!important}.freq{font-family:'Share Tech Mono',monospace!important}.panel h3{letter-spacing:1px!important}" : ""}
     ${skin === "sonim" ? ".rig{border:6px solid #d6aa26!important;box-shadow:0 0 0 3px #111,0 18px 42px #000c!important}.panel{border-radius:18px!important}#ptt{border-radius:50%!important;width:min(74vw,285px)!important;height:min(74vw,285px)!important;max-width:285px!important;max-height:285px!important;aspect-ratio:1/1!important}" : ""}
-    \${skin === "boondockecho" ? \`
+    ${skin === "boondockecho" ? `
     .rig{position:relative!important;overflow:hidden!important;background:linear-gradient(155deg,#b83a1c 0%,#8f210f 58%,#6e180d)!important;border:5px solid #e7d2c5!important;box-shadow:0 0 0 3px #48140d,0 18px 42px #000b!important}
     .rig:after{content:"";position:absolute;inset:150px -20px 20px;background-repeat:no-repeat;background-position:center bottom;background-size:100% 78%;opacity:.23;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 420' fill='none'%3E%3Cg stroke='%23f5d9c9' stroke-width='3' opacity='.9'%3E%3Cpath d='M-20 260 90 180 145 140 205 175 290 55 345 105 390 80 470 145 620 230'/%3E%3Cpath d='M-20 285 90 205 150 165 205 200 290 80 345 130 390 105 470 170 620 255'/%3E%3Cpath d='M35 330 120 260 175 245 230 275 300 170 365 210 420 185 500 245 620 300'/%3E%3Cpath d='M70 370 145 315 200 300 260 325 325 235 390 270 450 245 530 295 620 340'/%3E%3C/g%3E%3C/svg%3E")}
     .brand{position:relative;z-index:2;min-height:74px!important;align-items:center!important}
@@ -79,7 +79,7 @@
     #boondockLteIndicators svg{width:19px;height:19px;stroke:#f7dfd4;fill:none;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
     #clientControls{position:relative;z-index:3}
     #net{position:relative;z-index:3;color:#f3d4c7!important}
-    \` : ""}
+    ` : ""}
   `;
   function apply() {
     try {
