@@ -32,21 +32,20 @@ const auto=$("simpleAutoPower");auto.checked=localStorage.getItem("sanketptt.aut
 more.onclick=()=>{drawer.classList.toggle("open");$("radioLinesDev").classList.remove("open")};$("moreClose").onclick=()=>drawer.classList.remove("open");
 const sstv=$("sstvP"),sstvBtn=$("sstvBtn"),sstvFile=$("sstvFile");
 const sstvRow=document.createElement("div");sstvRow.id="simpleSstvRow";sstvRow.innerHTML='<span>SSTV SEND</span><button id="sstvBrowse">BROWSE</button><button id="sstvTake">CAMERA</button>';main.after(sstvRow);
-$("sstvBrowse").onclick=()=>{drawer.classList.remove("open");sstvFile.removeAttribute("capture");sstvFile.click()};
-$("sstvTake").onclick=()=>{drawer.classList.remove("open");sstvFile.setAttribute("capture","environment");sstvFile.click()};
-
-
 const sstvModal=document.createElement("div");sstvModal.id="simpleSstvModal";sstvModal.innerHTML='<div class="sstv-modal-head"><b>REVIEW IMAGE</b><button id="sstvModalClose" aria-label="Close">×</button></div>';sstvModal.appendChild($("sstvTx"));rig.appendChild(sstvModal);
 $("sstvModalClose").onclick=()=>{$("sstvTx").style.display="none";sstvModal.classList.remove("open")};
 $("sstvBrowse").onclick=()=>{sstvFile.removeAttribute("capture");sstvFile.click()};
 $("sstvTake").onclick=()=>{sstvFile.setAttribute("capture","environment");sstvFile.click()};
 $("sstvSend").textContent="OK · SEND";$("sstvCancel").textContent="CANCEL";
 if(sstvFile)document.body.appendChild(sstvFile);
-if(sstv){sstv.querySelector("h3").textContent="SSTV IMAGE";sstv.querySelector("label")?.remove();sstvBtn.textContent="BROWSE IMAGE";sstvBtn.onclick=()=>{sstvFile.removeAttribute("capture");sstvFile.click()};const cam=document.createElement("button");cam.textContent="CAMERA";cam.id="sstvCamera";sstvBtn.after(cam);cam.onclick=()=>{sstvFile.setAttribute("capture","environment");sstvFile.click()}}
+if(sstvBtn)sstvBtn.remove();if(sstv)sstv.remove();
 const fm=$("radioLinesDev"),audio=$("radioLineAudio");fm.classList.remove("open");
-const fmBtn=document.createElement("button");fmBtn.id="simpleFM";fmBtn.textContent="FM OFF";top.querySelector("div:last-child").prepend(fmBtn);
-fmBtn.onclick=()=>{drawer.classList.remove("open");fm.classList.toggle("open");fmBtn.textContent=fm.classList.contains("open")?"FM ON":"FM OFF";if(fm.classList.contains("open"))fm.scrollIntoView({behavior:"smooth",block:"start"})};
-if(audio)audio.addEventListener("play",()=>{fm.classList.remove("open");drawer.classList.remove("open")});
+const fmBtn=document.createElement("button");fmBtn.id="simpleFM";fmBtn.type="button";fmBtn.textContent="FM RADIO";fmBtn.setAttribute("aria-expanded","false");top.querySelector("div:last-child").prepend(fmBtn);
+const fmHead=fm.querySelector("h3"),fmClose=document.createElement("button");fmClose.id="fmPanelClose";fmClose.type="button";fmClose.textContent="×";fmClose.setAttribute("aria-label","Close FM radio panel");fmHead.appendChild(fmClose);
+function closeFmPanel(){fm.classList.remove("open");fmBtn.setAttribute("aria-expanded","false");}
+fmBtn.onclick=()=>{drawer.classList.remove("open");const open=!fm.classList.contains("open");fm.classList.toggle("open",open);fmBtn.setAttribute("aria-expanded",String(open));if(open)fm.scrollIntoView({behavior:"smooth",block:"nearest"})};
+fmClose.onclick=closeFmPanel;
+if(audio)audio.addEventListener("play",()=>{closeFmPanel();drawer.classList.remove("open")});
 document.querySelector(".panel:has(#us)")?.remove();$("locp")?.remove();const logPanel=$("log")?.closest(".panel");if(logPanel)logPanel.style.display="none";
 const messages=document.createElement("section");messages.id="simpleMessages";messages.innerHTML='<div class="ribbon-head">LAST FIVE AUDIO MESSAGES</div><div id="recentAudioRibbons"><small>Waiting for radio traffic</small></div><div class="transcript-head"><b>MESSAGE TRANSCRIPTS</b><span id="whisperState">WHISPER · AUTO</span></div><div id="simpleTranscriptList"><small>Incoming messages appear here</small></div>';main.after(messages);
 const css=[
@@ -97,9 +96,10 @@ $("sstvCancel")?.addEventListener("click",()=>{sstvModal.classList.remove("open"
 const oldRender=window.render;window.render=function(){if(oldRender)oldRender();if(!window.radio||!radio.name){ptt.textContent="POWER ON FIRST";ptt.className="";$("st").textContent="POWER OFF"}else if(!holding&&!granted&&!(radio.floor&&radio.floor.id!==radio.id))ptt.textContent="HOLD TO TALK"};
 const powerBtn=$("radioPower"),powerText=$("radioPowerText");
 let radioPowered=false;window.radioPowered=false;
+window.addEventListener("boondock:radio-state",e=>setRadioPower(!!(e.detail&&e.detail.powered)));
 function setRadioPower(on){
  radioPowered=!!on;window.radioPowered=radioPowered;
- powerBtn.classList.toggle("is-on",radioPowered);powerBtn.setAttribute("aria-pressed",String(radioPowered));powerBtn.setAttribute("aria-label",radioPowered?"Power off radio":"Power on radio");powerText.textContent=radioPowered?"POWER OFF":"POWER ON";
+ powerBtn.classList.toggle("is-on",radioPowered);powerBtn.setAttribute("aria-pressed",String(radioPowered));powerBtn.setAttribute("aria-label",radioPowered?"Power off radio":"Power on radio");powerText.textContent=radioPowered?"OFF":"ON";
  if(ledPwr)ledPwr.classList.toggle("on",radioPowered);
  rig.classList.toggle("radio-powered",radioPowered);if(meterPanel)meterPanel.style.removeProperty("display");
  ptt.disabled=!radioPowered;ptt.setAttribute("aria-disabled",String(!radioPowered));ptt.textContent=radioPowered?"HOLD TO TALK":"POWER ON FIRST";
@@ -111,16 +111,7 @@ function stopMic(){
  try{if(ac&&ac.state!=="closed")ac.close()}catch(e){}
  granted=false;holding=false;sstvTx=false;
 }
-async function powerOnRadio(){
- if(!name.value.trim()){name.focus();$("st").textContent="ENTER CALL SIGN";return false}
- if(!go||typeof go.onclick!=="function")throw new Error("ORIGINAL_JOIN_HANDLER_MISSING");
- // Reuse the original, previously working radio join/audio initialization path.
- // It requests getUserMedia, creates AudioContext, joins MQTT and wires the mic.
- await go.onclick.call(go);
- const callSign=window.fmtCS(name.value);
- if(!window.radio||window.radio.name!==callSign)throw new Error("ORIGINAL_JOIN_DID_NOT_COMPLETE");
- return true;
-}
+async function powerOnRadio(){if(!window.BoondockRadio||typeof window.BoondockRadio.powerOn!=="function")throw new Error("RADIO_CORE_NOT_READY");return await window.BoondockRadio.powerOn()}
 powerBtn.addEventListener("click",async()=>{
  if(powerBtn.disabled)return;
  if(!radioPowered){
@@ -137,8 +128,7 @@ powerBtn.addEventListener("click",async()=>{
    alert("Boondock Echo could not power on: "+msg+". Check microphone permission for this site and try again.");
   }finally{powerBtn.disabled=false}
  }else{
-  try{if(window.radio&&radio.name)radio.leave()}catch(e){}
-  stopMic();try{start()}catch(e){}
+  if(window.BoondockRadio)window.BoondockRadio.powerOff();
   setRadioPower(false);
  }
 });
@@ -147,9 +137,8 @@ ptt.addEventListener("pointerdown",e=>{if(!radioPowered||!window.radio||!radio.n
 ptt.addEventListener("click",e=>{if(!radioPowered||!window.radio||!radio.name){e.preventDefault();e.stopImmediatePropagation()}},true);
 window.addEventListener("keydown",e=>{if(e.code==="Space"&&!radioPowered){e.preventDefault();e.stopImmediatePropagation()}},true);
 setRadioPower(false);
-// First-run permission gate: auto-start only when the browser already reports
-// microphone permission as granted. Prompt/denied states remain OFF until the
-// user presses the physical-style POWER button and grants access.
+// First-run permission gate: if permission is already granted, start silently.
+// If the browser can prompt, getUserMedia asks once and continues after Allow.
 (async()=>{
  if(!auto.checked||!name.value.trim())return;
  try{
@@ -179,6 +168,8 @@ let fmWasPlaying=false,busy=false;function pauseFm(){if(audio&&!audio.paused){fm
 const oldDown=window.down;if(oldDown)window.down=function(e){pauseFm();return oldDown(e)};
 setInterval(()=>{if(!window.radio)return;const f=radio.floor,active=!!(f&&(f.id!==radio.id||radio.talking));if(active&&!busy)pauseFm();if(!active&&busy&&fmWasPlaying&&audio){fmWasPlaying=false;audio.play().catch(()=>{})}busy=active},180);
 
+
+const unifiedUiStyle=document.createElement("style");unifiedUiStyle.textContent=`#simpleFM{min-width:66px!important}#fmPanelClose{margin-left:auto;width:30px;height:28px;border-radius:7px;background:#641b10;border:1px solid #f0cbbb;color:#ffe7dc;font:22px Arial;line-height:1}#radioLinesDev{top:76px!important;bottom:48px!important;max-height:calc(100dvh - 132px)!important;border-radius:14px!important;box-shadow:0 12px 34px #000b!important}#radioLinesDev.open{display:block!important}#radioLinesDev h3{display:flex;align-items:center;gap:8px}#radioLinesDev .radio-tuner #radioPowerBtn{font-size:15px!important}#radioLinesDev .radio-tuner #radioPowerBtn:before{content:"FM · "}#radioLinesDev .radio-tuner #radioPowerBtn{letter-spacing:1px}#radioLinesDev .band-row button:disabled{opacity:.4;filter:grayscale(1)}#radioLinesDev .rl-row button:disabled{opacity:.45}#simpleRadioTop button:focus-visible,#simpleSstvRow button:focus-visible{outline:2px solid #ffe5a8;outline-offset:2px}`;document.head.appendChild(unifiedUiStyle);
 if(typeof window.render==="function")window.render();
 setInterval(()=>{const powered=!!(window.radio&&radio.name);if(powerBtn&&!powerBtn.disabled&&radioPowered&&!powered)setRadioPower(false);if(powered&&radioPowered&&!holding&&!granted&&!(radio.floor&&radio.floor.id!==radio.id))ptt.textContent="HOLD TO TALK"},500);
 })();
