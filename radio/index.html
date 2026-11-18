@@ -141,13 +141,13 @@ body{overflow-x:hidden}
  <div class="band-row" aria-label="Radio bands">
   <button type="button" class="active" data-band="ALL">ALL BANDS</button>
   <button type="button" data-band="FM">FM</button>
-  <button type="button" data-band="AM">AM</button>
-  <button type="button" data-band="SW">SW</button>
+  <button type="button" data-band="AM" disabled title="No AM stream feeds configured">AM · N/A</button>
+  <button type="button" data-band="SW" disabled title="No shortwave stream feeds configured">SW · N/A</button>
  </div>
  <div class="dial"><div class="tune-meta" id="tunerBandLabel">ALL INTERNET RADIO STREAMS</div><div class="frequency" id="tunerFrequency">TUNE</div><div class="tune-meta" id="tunerStationLabel">Select a station or scan</div></div>
  <div class="radio-lamps"><span class="lamp power"><i id="radioPowerLed"></i>POWER</span><span class="lamp"><i id="radioPlayLed"></i>ON AIR</span><span class="lamp signal"><i id="radioSignalLed"></i>SIGNAL</span></div>
  <div class="radio-bars" id="radioBars" aria-label="Audio level meter"></div>
- <div class="power-row"><button type="button" id="radioPowerBtn" aria-pressed="false">⏻ POWER ON</button></div>
+ <div class="power-row"><button type="button" id="radioPowerBtn" aria-pressed="false">PLAY FM</button></div>
  <input id="tunerDial" type="range" min="0" max="0" value="0" step="1" aria-label="Tune station">
  <div class="tune-row">
   <button type="button" id="tuneDown">◀ TUNE</button><button type="button" id="scanDown">◀ SCAN</button>
@@ -167,8 +167,8 @@ body{overflow-x:hidden}
 
 </div>
 <div class="rl-row" style="margin-top:7px">
-<button id="radioBridgeBtn" type="button">BRIDGE INTO PTT CHANNEL</button>
-<button id="radioBridgeStopBtn" class="secondary" type="button">STOP BRIDGE</button>
+<button id="radioBridgeBtn" type="button" disabled>BRIDGE INTO PTT CHANNEL</button>
+<button id="radioBridgeStopBtn" class="secondary" type="button" disabled>STOP BRIDGE</button>
 </div>
 <div class="rl-status" id="radioLineStatus" role="status">Choose a radio line. Play listens on this device; Bridge publishes it into the selected PTT channel as a radio station.</div>
 <div class="rl-note">DEV browser gateway: keep this page open while bridging. Stream providers must permit browser playback and audio capture (CORS). Radio lines are receive-only; they cannot receive PTT transmissions.</div>
