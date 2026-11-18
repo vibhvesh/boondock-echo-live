@@ -427,7 +427,7 @@ function sstvEnd(){var S=sstvRx;sstvRx=null;if(!S)return;var m=sstvMetas[S.id],f
 function sstvUseClean(it,url,st){var im=new Image();im.onload=function(){it.cv.getContext('2d').drawImage(im,0,0,it.cv.width,it.cv.height);it.clean=url;it.st=st;sstvItem(it)};im.src=url}
 sstvBtn.onclick=function(){if(main.style.display!=='block')return alert('Log on first');sstvFile.click()};
 sstvFile.onchange=function(){var f=sstvFile.files[0];if(!f)return;var im=new Image();im.onload=function(){var g=sstvPrev.getContext('2d'),W=320,H=240,s=Math.max(W/im.width,H/im.height),w=im.width*s,h=im.height*s;
-  g.fillStyle='#000';g.fillRect(0,0,W,H);g.drawImage(im,(W-w)/2,(H-h)/2,w,h);URL.revokeObjectURL(im.src);sstvTx0();sstvTxP.style.display='block';sstvSt.textContent='Ready · Robot36 takes ~'+Math.round(SSTV.durationSec)+' s and holds the channel'};im.src=URL.createObjectURL(f);sstvFile.value=''};
+  g.fillStyle='#000';g.fillRect(0,0,W,H);g.drawImage(im,(W-w)/2,(H-h)/2,w,h);URL.revokeObjectURL(im.src);sstvTx0();sstvTxP.style.display='block';sstvSt.textContent='Ready · Robot36 takes ~'+Math.round(SSTV.durationSec)+' s and holds the channel';sstvFile.value=''};im.src=URL.createObjectURL(f)};
 var sstvTxP=document.getElementById('sstvTx');function sstvTx0(){sstvSend.disabled=false}
 sstvCancel.onclick=function(){if(sstvTx){sstvTx=false;return}sstvTxP.style.display='none'};
 sstvSend.onclick=function(){if(sstvTx)return;if(!window.radioPowered||!radio||!radio.name)return alert('Power on Boondock Echo before sending SSTV.');var f=radio.floor;if(f&&f.id!==radio.id)return alert('Channel busy');sstvSend.disabled=true;sstvSt.textContent='Claiming channel…';unlockAudio();
