@@ -113,35 +113,13 @@ function stopMic(){
 }
 async function powerOnRadio(){
  if(!name.value.trim()){name.focus();$("st").textContent="ENTER CALL SIGN";return false}
- if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error("MICROPHONE_API_UNAVAILABLE");
- $("st").textContent="REQUESTING MICROPHONE";
- const callSign=window.fmtCS(name.value);name.value=callSign;localStorage.nm=callSign;
- // This is the only place that requests microphone permission and joins.
- stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
- if(!stream||!stream.getAudioTracks().some(t=>t.readyState==="live"))throw new Error("NO_LIVE_MICROPHONE_TRACK");
- const AudioCtor=window.AudioContext||window.webkitAudioContext;
- if(!AudioCtor)throw new Error("AUDIO_CONTEXT_UNAVAILABLE");
- ac=new AudioCtor();
- await ac.resume();
- try{unlockAudio()}catch(e){}
- try{if(typeof window.startLoc==="function")window.startLoc()}catch(locError){console.warn("Location startup skipped:",locError)}
- $("login").style.display="none";$("main").style.display="block";
- $("hd").textContent="#"+window.radio.ch+" — "+callSign;
- if(!window.radio||window.radio.closed)window.start();
- window.radio.join(callSign);
- const source=ac.createMediaStreamSource(stream);
- proc=ac.createScriptProcessor(4096,1,1);
- const mute=ac.createGain();mute.gain.value=0;
- source.connect(proc);proc.connect(mute);mute.connect(ac.destination);
- proc.onaudioprocess=function(e){
-  if(!granted||window.sstvTx||!window.radio||!window.radio.name)return;
-  const input=e.inputBuffer.getChannelData(0),ratio=ac.sampleRate/RATE,count=Math.floor(input.length/ratio),out=new Int16Array(count);
-  for(let k=0;k<count;k++)out[k]=Math.max(-1,Math.min(1,input[Math.floor(k*ratio)]))*32767;
-  if(window.radio.sendAudio(out)){window.txLvl=Math.max(window.txLvl,window.lvl(out));window.rec.feed(window.radio.id,window.radio.name,out,true,undefined,window.radio.loc)}
- };
- setInterval(function(){if(window.ac&&window.ac.state!=="closed"&&unlockButton)unlockButton.style.display=window.ac.state==="running"?"none":"block"},1000);
- render();
- return !!(window.radio&&window.radio.name===callSign);
+ if(!go||typeof go.onclick!=="function")throw new Error("ORIGINAL_JOIN_HANDLER_MISSING");
+ // Reuse the original, previously working radio join/audio initialization path.
+ // It requests getUserMedia, creates AudioContext, joins MQTT and wires the mic.
+ await go.onclick.call(go);
+ const callSign=window.fmtCS(name.value);
+ if(!window.radio||window.radio.name!==callSign)throw new Error("ORIGINAL_JOIN_DID_NOT_COMPLETE");
+ return true;
 }
 powerBtn.addEventListener("click",async()=>{
  if(powerBtn.disabled)return;
@@ -174,16 +152,22 @@ setRadioPower(false);
 // user presses the physical-style POWER button and grants access.
 (async()=>{
  if(!auto.checked||!name.value.trim())return;
- if(!navigator.permissions||!navigator.permissions.query){$("st").textContent="MIC PERMISSION CHECK · PRESS POWER";return}
  try{
-  const permission=await navigator.permissions.query({name:"microphone"});
-  if(permission.state!=="granted"){$("st").textContent=permission.state==="denied"?"MIC BLOCKED · CHECK BROWSER SETTINGS":"MIC PERMISSION NEEDED · PRESS POWER";return}
+  if(navigator.permissions&&navigator.permissions.query){
+   const permission=await navigator.permissions.query({name:"microphone"});
+   if(permission.state==="denied"){$("st").textContent="MIC BLOCKED · ENABLE IN SITE SETTINGS";return}
+  }
   if(radioPowered||powerBtn.disabled)return;
   powerBtn.disabled=true;powerText.textContent="STARTING";
-  try{const joined=await powerOnRadio();if(joined){setRadioPower(true);$("st").textContent="RADIO ON · "+radio.ch.toUpperCase()}else{setRadioPower(false);$("st").textContent="RADIO JOIN FAILED"}}
-  catch(e){stopMic();setRadioPower(false);$("st").textContent="MIC UNAVAILABLE · PRESS POWER";console.error("Boondock auto-start failed:",e)}
-  finally{powerBtn.disabled=false}
- }catch(e){$("st").textContent="MIC PERMISSION CHECK · PRESS POWER"}
+  // If permission is already granted this continues silently; if it is prompt,
+  // the original getUserMedia call asks the user and continues after Allow.
+  const joined=await powerOnRadio();
+  if(joined){setRadioPower(true);$("st").textContent="RADIO ON · "+radio.ch.toUpperCase()}
+ }catch(e){
+  stopMic();setRadioPower(false);
+  $("st").textContent=e&&e.name==="NotAllowedError"?"MIC PERMISSION DENIED":"AUTO START FAILED";
+  console.error("Boondock first-run startup failed:",e);
+ }finally{powerBtn.disabled=false}
 })();
 let asr=null,asrLoading=null,queue=Promise.resolve();const done=new Set(),texts=new Map();
 async function loadWhisper(){if(asr)return asr;if(asrLoading)return asrLoading;$("whisperState").textContent="WHISPER · LOADING";asrLoading=import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.5").then(T=>T.pipeline("automatic-speech-recognition","onnx-community/whisper-base",{dtype:"q8"})).then(p=>{asr=p;$("whisperState").textContent="WHISPER · ON DEVICE";return p}).catch(e=>{$("whisperState").textContent="WHISPER · UNAVAILABLE";throw e});return asrLoading}
