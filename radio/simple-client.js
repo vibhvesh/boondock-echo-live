@@ -10,7 +10,7 @@ rig.querySelector(".brand").after(top);
 const ledGroup=document.querySelector(".leds"),ledPwr=ledGroup&&ledGroup.querySelector(".led.pw");
 if(ledGroup){top.querySelector(".simple-channel").after(ledGroup);ledGroup.style.display="flex";ledGroup.style.gap="7px";ledGroup.style.alignItems="center"}
 if(ledPwr){ledPwr.id="ledpw";ledPwr.classList.remove("on")}
-["rx","tx"].forEach(kind=>{const old=ledGroup&&ledGroup.querySelector(".led."+kind);if(old&&old.tagName!=="BUTTON"){const btn=document.createElement("button");btn.type="button";btn.id=kind==="rx"?"ledrx":"ledtx";btn.className=old.className+" status-led";btn.setAttribute("aria-label",kind==="rx"?"Receive status":"Transmit status");btn.setAttribute("aria-pressed","false");btn.innerHTML=old.innerHTML;old.replaceWith(btn)}});
+["rx","tx"].forEach(kind=>{const old=ledGroup&&ledGroup.querySelector(".led."+kind);if(old&&old.tagName!=="BUTTON"){const btn=document.createElement("button");btn.type="button";btn.id=kind==="rx"?"ledrx":"ledtx";btn.className=old.className+" status-led";btn.setAttribute("aria-label",kind==="rx"?"Receive status":"Transmit status");btn.setAttribute("aria-pressed","false");btn.innerHTML=old.innerHTML;old.replaceWith(btn);window[kind==="rx"?"ledrx":"ledtx"]=btn}});
 const ledRx=$("ledrx"),ledTx=$("ledtx");
 skins.forEach(([v,n])=>$("simpleSkin").add(new Option(n,v)));$("simpleSkin").value=params.get("skin")||"boondockecho";
 $("simpleSkin").onchange=()=>{try{const u=new URL(window.parent.location.href);u.searchParams.set("skin",$("simpleSkin").value);window.parent.location.href=u.href}catch(e){const u=new URL(location.href);u.searchParams.set("skin",$("simpleSkin").value);location.href=u.href}};
@@ -119,7 +119,6 @@ powerBtn.addEventListener("click",()=>{
   try{go.click();setTimeout(()=>{const joined=!!(window.radio&&radio.name);setRadioPower(joined);powerBtn.disabled=false;if(joined)ptt.textContent="HOLD TO TALK"},1200)}
   catch(e){powerBtn.disabled=false;setRadioPower(false)}
  }else{
-  try{if(window.radio&&radio.name)radio.leave()}catch(e){}
   stopMic();try{start()}catch(e){}
   setRadioPower(false);
  }
