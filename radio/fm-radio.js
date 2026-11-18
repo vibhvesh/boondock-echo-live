@@ -167,18 +167,18 @@
  let hls=null,mediaSource=null,processor=null,mute=null,bot=null,bridging=false,streamReady=false;
  const powerBtn=$("radioPowerBtn"),powerLed=$("radioPowerLed"),playLed=$("radioPlayLed"),signalLed=$("radioSignalLed"),radioBars=$("radioBars");
  const meterBars=Array.from({length:24},()=>{const b=document.createElement("b");radioBars.appendChild(b);return b});
- let meterCtx=null,meterAnalyser=null,meterSource=null,meterData=null,meterFrame=0;
+ let meterCtx=null,meterAnalyser=null,meterSource=null,meterData=null,meterFrame=0,meterConnected=false;
  function radioPowerState(on){powerBtn.classList.toggle("on",on);powerBtn.textContent=on?"STOP FM":"PLAY FM";powerBtn.setAttribute("aria-pressed",String(on));powerLed.classList.toggle("on",on);playLed.classList.toggle("on",on&&streamReady);signalLed.classList.toggle("on",on&&streamReady&&!audio.paused)}
  function animateRadioMeter(){if(meterAnalyser&&meterData&&streamReady&&!audio.paused){meterAnalyser.getByteFrequencyData(meterData);meterBars.forEach((b,i)=>{const v=meterData[Math.floor(i*meterData.length/meterBars.length)]||0;b.style.height=Math.max(5,Math.round(v/255*100))+"%"});signalLed.classList.toggle("on",meterData.some(v=>v>8))}else{meterBars.forEach(b=>b.style.height="5%");signalLed.classList.remove("on")}meterFrame=requestAnimationFrame(animateRadioMeter)}
  animateRadioMeter();
- function attachRadioMeter(){try{if(!window.ac||ac.state==="closed")return;if(!meterSource){meterSource=ac.createMediaElementSource(audio);meterAnalyser=ac.createAnalyser();meterAnalyser.fftSize=128;meterData=new Uint8Array(meterAnalyser.frequencyBinCount);meterSource.connect(meterAnalyser);meterAnalyser.connect(ac.destination)}}catch(e){/* meter remains idle when browser audio graph is unavailable */}}
+ async function attachRadioMeter(){try{const AudioCtor=window.AudioContext||window.webkitAudioContext;if(!AudioCtor)return;if(!meterCtx||meterCtx.state==="closed"){meterCtx=new AudioCtor();meterSource=null;meterAnalyser=null;meterConnected=false}if(!meterSource)meterSource=meterCtx.createMediaElementSource(audio);if(!meterAnalyser){meterAnalyser=meterCtx.createAnalyser();meterAnalyser.fftSize=128;meterData=new Uint8Array(meterAnalyser.frequencyBinCount)}if(!meterConnected){meterSource.connect(meterAnalyser);meterAnalyser.connect(meterCtx.destination);meterConnected=true}if(meterCtx.state==="suspended")await meterCtx.resume()}catch(e){console.warn("FM audio meter unavailable:",e)}}
 
  function say(t){status.textContent=t}
  function station(){return stations[select.value]||stations.vividh}
  function cleanupStream(){if(hls){hls.destroy();hls=null}audio.pause();audio.removeAttribute("src");audio.load();streamReady=false;radioPowerState(false)}
  function isHlsStream(url){return /\.m3u8(?:$|[?#])/i.test(url)}
  async function playRadio(){
-  const st=station();cleanupStream();audio.crossOrigin="anonymous";
+  const st=station();cleanupStream();audio.crossOrigin="anonymous";await attachRadioMeter();
   say("Tuning "+st.name+"…");
   return await new Promise(resolve=>{
    let settled=false,timer=setTimeout(()=>finish(false,"No stream response from "+st.name),12000);
@@ -214,17 +214,17 @@
  window.__sanketRadioPreempt=function(claimPTT){
   if(bridging||bot){stopBridge();setTimeout(claimPTT,220)}else claimPTT();
  };
- function setupAudioGraph(){
-  if(!window.ac||ac.state==="closed")throw new Error("First power on / join PTT, then enable audio.");
-  if(!meterSource){meterSource=ac.createMediaElementSource(audio);mediaSource=meterSource}
-  if(!meterAnalyser){meterAnalyser=ac.createAnalyser();meterAnalyser.fftSize=128;meterData=new Uint8Array(meterAnalyser.frequencyBinCount);meterSource.connect(meterAnalyser);meterAnalyser.connect(ac.destination)}
+ async function setupAudioGraph(){
+  if(!window.radioPowered||!window.radio||!window.radio.name)throw new Error("Power on Boondock Echo PTT first.");
+  await attachRadioMeter();
+  if(!meterCtx||meterCtx.state==="closed"||!meterSource)throw new Error("FM audio graph is unavailable.");
   if(!processor){
-   processor=ac.createScriptProcessor(4096,1,1);
-   mute=ac.createGain();mute.gain.value=0;
-   meterSource.connect(processor);processor.connect(mute);mute.connect(ac.destination);
+   processor=meterCtx.createScriptProcessor(4096,1,1);
+   mute=meterCtx.createGain();mute.gain.value=0;
+   meterSource.connect(processor);processor.connect(mute);mute.connect(meterCtx.destination);
    processor.onaudioprocess=e=>{
     if(!bridging||!bot||!bot.talking||!bot.c||!bot.c.connected)return;
-    const input=e.inputBuffer.getChannelData(0),ratio=ac.sampleRate/(window.RATE||12000);
+    const input=e.inputBuffer.getChannelData(0),ratio=meterCtx.sampleRate/(window.RATE||12000);
     const n=Math.floor(input.length/ratio);if(!n)return;
     const pcm=new Int16Array(n);
     for(let i=0;i<n;i++){const v=input[Math.floor(i*ratio)];pcm[i]=Math.max(-1,Math.min(1,v))*32767}
@@ -237,7 +237,7 @@
   if(!window.ac||ac.state==="closed"){say("Power on / join PTT first, then enable audio.");return}
   if(!streamReady||audio.paused){await playRadio();say("Wait until the radio is playing, then tap BRIDGE INTO PTT CHANNEL.");return}
   if(bot)stopBridge();
-  try{setupAudioGraph()}catch(e){say(e.message);return}
+  try{await setupAudioGraph()}catch(e){say(e.message);return}
   const st=station();bot=new Radio(mqtt,{ch:radio.ch,on:(kind,value)=>{if(kind==="net")say("Radio gateway relay: "+value)}});
   bot.join("RADIO · "+st.name);
   say("Requesting the floor on PTT channel "+radio.ch+"…");
@@ -309,11 +309,11 @@
  });
  $("radioScanNow").addEventListener("click",scanAllStations);
  renderStationButtons();setTimeout(scanAllStations,1200);setInterval(()=>{if(!document.hidden)scanAllStations()},300000);
-  powerBtn.addEventListener("click",async()=>{if(streamReady&&!audio.paused){stopBridge();cleanupStream();say("FM playback stopped.");return}if(window.ac&&ac.state!=="closed")attachRadioMeter();await playRadio()});
+  powerBtn.addEventListener("click",async()=>{if(streamReady&&!audio.paused){stopBridge();cleanupStream();say("FM playback stopped.");return}await playRadio()});
  $("radioBridgeStopBtn").disabled=true;$("radioBridgeBtn").disabled=!window.radioPowered;
  window.addEventListener("boondock:radio-state",e=>{const on=!!(e.detail&&e.detail.powered);if(!on&&bridging)stopBridge();$("radioBridgeBtn").disabled=!on||bridging;$("radioBridgeStopBtn").disabled=!bridging});
  $("radioBridgeBtn").addEventListener("click",bridge);
  $("radioBridgeStopBtn").addEventListener("click",stopBridge);
  select.addEventListener("change",()=>{if(bridging)stopBridge();cleanupStream();refreshTuner();renderStationButtons();say("Selected "+station().name+". Press PLAY FM to listen.")});
- window.addEventListener("beforeunload",()=>{stopBridge();cleanupStream();cancelAnimationFrame(meterFrame)});
+ window.addEventListener("beforeunload",()=>{stopBridge();cleanupStream();cancelAnimationFrame(meterFrame);if(meterCtx&&meterCtx.state!=="closed")meterCtx.close()});
 })();
