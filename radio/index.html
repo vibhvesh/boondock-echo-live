@@ -301,7 +301,7 @@ function start(){if(radio)radio.leave();radio=new Radio(mqtt,{ch:CHANNEL,on:func
 window.BoondockRadio={
  _starting:null,
  async powerOn(){
-  if(radio&&radio.name&&stream&&stream.getAudioTracks().some(t=>t.readyState==="live"))return true;
+  if(radio&&radio.name&&stream&&stream.getAudioTracks().some(t=>t.readyState==="live")){window.dispatchEvent(new CustomEvent("boondock:radio-state",{detail:{powered:true,channel:radio.ch,callSign:radio.name}}));return true;}
   if(this._starting)return this._starting;
   this._starting=(async()=>{
    var nameEl=document.getElementById("nm"),callSign=fmtCS(nameEl.value);
@@ -339,7 +339,13 @@ window.BoondockRadio={
     window.dispatchEvent(new CustomEvent("boondock:radio-state",{detail:{powered:true,channel:radio.ch,callSign:callSign}}));
     return true;
    }catch(err){
-    if(newStream&&newStream!==stream)newStream.getTracks().forEach(t=>t.stop());
+    try{if(radio&&radio.name)radio.leave()}catch(e){}
+    try{if(proc){proc.disconnect();proc.onaudioprocess=null;proc=null}}catch(e){}
+    try{if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}catch(e){}
+    try{if(newStream)newStream.getTracks().forEach(t=>t.stop())}catch(e){}
+    try{if(ac&&ac.state!=="closed")ac.close()}catch(e){}
+    granted=false;holding=false;radio=null;try{start()}catch(e){}
+    window.dispatchEvent(new CustomEvent("boondock:radio-state",{detail:{powered:false}}));
     throw err;
    }
   })();
