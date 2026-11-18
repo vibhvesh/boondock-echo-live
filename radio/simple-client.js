@@ -26,7 +26,7 @@ const pttHint=ptt.nextElementSibling&&ptt.nextElementSibling.classList.contains(
 pttDock.appendChild(ptt);if(pttHint)pttDock.appendChild(pttHint);
 const topRight=top.querySelector("div:last-child");topRight.classList.add("simple-top-right");const lcd=document.querySelector(".lcd");lcd.after(pttDock);
 
-login.style.display="none";go.style.display="none";main.style.display="block";main.insertBefore(name,main.firstChild);name.placeholder="Call sign";name.setAttribute("aria-label","Call sign");$("hd").style.display="none";
+login.style.display="none";go.style.display="none";main.style.display="block";main.insertBefore(name,main.firstChild);pttDock.before(name);name.placeholder="Call sign";name.setAttribute("aria-label","Call sign");$("hd").style.display="none";
 const more=document.createElement("button");more.id="simpleMore";more.textContent="⋮";more.setAttribute("aria-label","More radio controls");top.querySelector("div:last-child").appendChild(more);const drawer=document.createElement("div");drawer.id="simpleMoreDrawer";drawer.innerHTML='<div class="more-head"><b>RADIO OPTIONS</b><button id="moreClose">×</button></div><label>CHANNEL<select id="simpleChannel"></select></label><label class="auto-row">AUTO POWER ON <input id="simpleAutoPower" type="checkbox"></label><small>FM pauses automatically during PTT.</small>';
 rig.append(drawer);
 const skinLabel=document.createElement("label");skinLabel.textContent="RADIO SKIN";skinLabel.appendChild($("simpleSkin"));drawer.appendChild(skinLabel);
@@ -235,6 +235,76 @@ setInterval(()=>{if(!window.radio)return;const f=radio.floor,active=!!(f&&(f.id!
 const sstvProgressStyle=document.createElement("style");sstvProgressStyle.textContent=`#simpleSstvRow #sstvProgress{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:9px Arial;color:#ffe2a8;letter-spacing:0}`;document.head.appendChild(sstvProgressStyle);
 const playbackStyle=document.createElement("style");playbackStyle.textContent=`.audio-ribbon{display:flex!important;flex-direction:column!important;justify-content:center;gap:3px}.audio-ribbon .ribbon-play{font-weight:800;color:#ffe3a8;font-size:9px}.audio-ribbon.mine,.transcript-item.mine{border-color:#f5c77a88;background:#7c301c}.message-play{border:1px solid #f0cbbb88;border-radius:6px;background:#702316;color:#ffe9df;padding:3px 7px;font:800 9px Arial}.message-play.playing,.ribbon-play.playing{background:#a34a24;color:#fff}`;document.head.appendChild(playbackStyle);
 const unifiedUiStyle=document.createElement("style");unifiedUiStyle.textContent=`#simpleFM{min-width:66px!important}#fmPanelClose{margin-left:auto;width:30px;height:28px;border-radius:7px;background:#641b10;border:1px solid #f0cbbb;color:#ffe7dc;font:22px Arial;line-height:1}#radioLinesDev{top:76px!important;bottom:48px!important;max-height:calc(100dvh - 132px)!important;border-radius:14px!important;box-shadow:0 12px 34px #000b!important}#radioLinesDev.open{display:block!important}#radioLinesDev h3{display:flex;align-items:center;gap:8px}#radioLinesDev .radio-tuner #radioPowerBtn{font-size:15px!important}#radioLinesDev .radio-tuner #radioPowerBtn:before{content:"FM · "}#radioLinesDev .radio-tuner #radioPowerBtn{letter-spacing:1px}#radioLinesDev .band-row button:disabled{opacity:.4;filter:grayscale(1)}#radioLinesDev .rl-row button:disabled{opacity:.45}#simpleRadioTop button:focus-visible,#simpleSstvRow button:focus-visible{outline:2px solid #ffe5a8;outline-offset:2px}`;document.head.appendChild(unifiedUiStyle);
+
+/* BOONDOCK ECHO — clean handheld faceplate, final authoritative layout */
+const approvedFaceplate=document.createElement("style");
+approvedFaceplate.id="boondock-approved-faceplate";
+approvedFaceplate.textContent=`
+html,body{width:100%;height:100%;min-height:0;margin:0!important;padding:0!important;overflow:hidden!important;background:#8f210f!important}
+body{font-family:Arial,Helvetica,sans-serif!important}
+.rig{position:relative!important;width:100%!important;max-width:520px!important;height:100dvh!important;min-height:0!important;margin:0 auto!important;padding:8px 12px calc(58px + env(safe-area-inset-bottom))!important;display:flex!important;flex-direction:column!important;gap:7px!important;overflow:hidden!important;border:2px solid #e9c8b8!important;border-radius:0!important;background:linear-gradient(180deg,#a9361b 0%,#92220f 55%,#7b1c0d 100%)!important;box-shadow:inset 0 0 0 5px #ffffff18!important}
+.rig:before,.rig:after{display:none!important}
+.brand{display:none!important}
+#simpleRadioTop{order:0!important;display:flex!important;flex:0 0 42px!important;min-height:42px!important;align-items:center!important;justify-content:space-between!important;gap:7px!important;padding:0 3px!important}
+#simpleRadioTop .simple-top-left{display:flex!important;align-items:center!important;gap:9px!important;min-width:0!important;flex:1!important}
+#radioPower{height:34px!important;min-width:68px!important;padding:0 9px!important;border:1px solid #f4d3c3!important;border-radius:18px!important;background:linear-gradient(#572016,#2b100b)!important;color:#ffeadf!important;font:900 10px Arial!important}
+#radioPower.is-on{background:linear-gradient(#f5c35e,#a95c1a)!important;color:#32140b!important}
+.simple-channel{min-width:0!important;max-width:none!important;flex:1!important;overflow:hidden!important;white-space:nowrap!important;text-overflow:ellipsis!important;color:#ffe6da!important;font:800 11px Arial!important;letter-spacing:1px!important}
+#simpleRadioTop .leds{display:flex!important;align-items:center!important;gap:5px!important}
+.led{font:800 8px Arial!important;color:#f4d8cc!important}
+.led i{width:10px!important;height:10px!important}
+#simpleRadioTop>div:last-child{display:flex!important;align-items:center!important;gap:5px!important}
+#simpleSkin{display:none!important}
+#simpleClose{width:32px!important;height:32px!important;flex:0 0 32px!important;border-radius:50%!important;background:#57180f!important;color:#fff!important;font:23px Arial!important}
+.lcd{order:1!important;flex:0 0 auto!important;margin:0!important;padding:9px 12px!important;border:4px solid #4b2118!important;border-radius:15px!important;background:linear-gradient(180deg,#35170f,#160b08)!important;color:#f7d9cb!important;box-shadow:inset 0 0 18px #000,0 2px 8px #0005!important;text-shadow:none!important}
+.lcd .row{font:12px Arial!important;color:#e8c9bb!important}
+.lcd .freq{margin:7px 0!important;font:900 clamp(28px,7vw,43px) Orbitron,Arial,sans-serif!important;letter-spacing:2px!important;color:#f5d8cb!important;text-shadow:0 0 10px #f2b9a0!important}
+#st{min-height:17px!important;font:13px Arial!important;color:#f4d4c7!important}
+.lcd .meter{display:none!important}
+#nm{order:2!important;display:block!important;flex:0 0 48px!important;width:min(100%,390px)!important;height:48px!important;min-height:48px!important;margin:0 auto!important;padding:7px 12px!important;border:2px solid #bd8978!important;border-radius:15px!important;background:#551b12!important;color:#fff!important;text-align:center!important;font:18px Arial!important}
+#simplePttDock{order:3!important;display:flex!important;flex:1 1 0!important;min-height:0!important;width:100%!important;align-items:center!important;justify-content:center!important;margin:0!important;padding:3px 0!important}
+#simplePttDock #ptt{display:block!important;width:min(68vw,42dvh,420px)!important;height:min(68vw,42dvh,420px)!important;min-width:210px!important;min-height:210px!important;max-width:420px!important;max-height:420px!important;aspect-ratio:1/1!important;flex:0 1 auto!important;margin:0 auto!important;border:7px solid #542016!important;border-radius:50%!important;background:radial-gradient(circle at 36% 27%,#ffb18e 0%,#f46a3e 38%,#d83b1d 72%,#8d210f 100%)!important;box-shadow:0 0 0 4px #f2d1c2,0 10px 24px #3b100a99,inset 0 -13px 22px #70200e88,inset 0 5px 15px #ffffff55!important;color:#fff4ed!important;text-shadow:0 2px 3px #6a1b0c!important;font:900 26px Orbitron,Arial,sans-serif!important;letter-spacing:3px!important;touch-action:none!important}
+#simplePttDock #ptt.on{background:radial-gradient(circle at 36% 27%,#ffc1a8,#f12e20 55%,#8b0906)!important}
+#simplePttDock #ptt.busy{background:radial-gradient(circle at 36% 27%,#ffe5a0,#e99b22 55%,#81500c)!important}
+#simplePttDock .hint{display:none!important}
+#main{display:none!important;height:0!important;min-height:0!important;flex:0 0 0!important;margin:0!important;padding:0!important}
+#simpleMessages{order:4!important;display:flex!important;flex:1 1 150px!important;width:100%!important;height:auto!important;min-height:110px!important;max-height:none!important;margin:0 0 2px!important;padding:12px!important;gap:7px!important;overflow:hidden!important;border:1px solid #d8a18c!important;border-radius:18px!important;background:#5b1b11eF!important;color:#fff0e8!important}
+.ribbon-head,.transcript-head{font:800 10px Arial!important;letter-spacing:1px!important;color:#f7d8ca!important}
+#recentAudioRibbons{min-height:40px!important;flex:0 0 auto!important}
+#simpleTranscriptList{flex:1 1 auto!important;min-height:0!important;overflow:auto!important}
+.transcript-item{font:12px/1.4 Arial!important}
+.transcript-meta{color:#f1c6b5!important}
+.transcript-text{color:#fff2eb!important}
+.message-play{background:#702316!important;color:#ffe9df!important}
+#simpleSstvGallery{display:none!important}
+#simpleSstvRow{position:fixed!important;left:12px!important;bottom:calc(54px + env(safe-area-inset-bottom))!important;z-index:24!important;width:1px!important;height:1px!important;overflow:hidden!important;opacity:0!important;pointer-events:none!important}
+#simpleMore,#simpleFM{position:fixed!important;z-index:50!important;bottom:calc(9px + env(safe-area-inset-bottom))!important;width:auto!important;height:42px!important;min-width:116px!important;padding:0 18px!important;border:1px solid #f2d0c1!important;border-radius:24px!important;background:#5b1a10!important;color:#ffeadf!important;box-shadow:0 3px 9px #0006!important;font:800 11px Arial!important;letter-spacing:.4px!important}
+#simpleMore{left:14px!important}
+#simpleFM{right:14px!important;left:auto!important;transform:none!important}
+#simpleMoreDrawer{position:fixed!important;z-index:55!important;left:12px!important;top:58px!important;bottom:auto!important;width:min(290px,calc(100vw - 24px))!important;max-height:calc(100dvh - 130px)!important;overflow:auto!important;border:1px solid #e8c1af!important;border-radius:14px!important;background:#57190f!important;color:#ffeadf!important;box-shadow:0 12px 30px #0009!important}
+#simpleMoreDrawer.open{display:block!important}
+#radioLinesDev{display:block!important;position:fixed!important;z-index:60!important;left:0!important;right:0!important;top:auto!important;bottom:0!important;width:100%!important;height:min(72dvh,620px)!important;max-height:72dvh!important;margin:0!important;padding:14px 12px calc(64px + env(safe-area-inset-bottom))!important;overflow:auto!important;border:1px solid #e8c1af!important;border-bottom:0!important;border-radius:20px 20px 0 0!important;background:#42170f!important;box-shadow:0 -12px 32px #000a!important;transform:translateY(105%)!important;visibility:hidden!important;transition:transform .28s ease,visibility .28s ease!important}
+#radioLinesDev.open{display:block!important;transform:translateY(0)!important;visibility:visible!important}
+#radioLinesDev h3{display:flex!important;align-items:center!important;gap:8px!important;color:#ffe0cf!important}
+#fmPanelClose{margin-left:auto!important}
+#sstvP,#locp,.panel:has(#us),.panel:has(#log),#net{display:none!important}
+@media(max-height:700px){
+ .rig{gap:4px!important;padding-top:5px!important}
+ #simpleRadioTop{flex-basis:35px!important;min-height:35px!important}
+ .lcd{padding:6px 9px!important}
+ .lcd .freq{font-size:clamp(24px,6vw,34px)!important;margin:3px 0!important}
+ #nm{flex-basis:40px!important;height:40px!important;min-height:40px!important;font-size:16px!important}
+ #simplePttDock #ptt{width:min(61vw,34dvh,340px)!important;height:min(61vw,34dvh,340px)!important;min-width:190px!important;min-height:190px!important}
+ #simpleMessages{min-height:90px!important}
+}
+@media(max-width:380px){
+ #simpleRadioTop .simple-channel{font-size:9px!important;letter-spacing:.3px!important}
+ #radioPower{min-width:58px!important}
+ #simpleMore,#simpleFM{min-width:100px!important;height:38px!important}
+}
+`;
+document.head.appendChild(approvedFaceplate);
+
 if(typeof window.render==="function")window.render();
 setInterval(()=>{const powered=!!(window.radio&&radio.name);if(powerBtn&&!powerBtn.disabled&&radioPowered&&!powered)setRadioPower(false);if(!radioPowered&&ptt.textContent!=="POWER ON FIRST")ptt.textContent="POWER ON FIRST";if(powered&&radioPowered&&!holding&&!granted&&!(radio.floor&&radio.floor.id!==radio.id))ptt.textContent="HOLD TO TALK"},500);
 })();
