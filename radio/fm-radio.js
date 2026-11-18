@@ -147,7 +147,7 @@
   dial.max=Math.max(0,visibleStations.length-1);dial.value=ix;
   bandLabel.textContent=activeBand==="ALL"?"ALL INTERNET RADIO STREAMS":activeBand+" BAND";
   $("tuneDown").disabled=$("tuneUp").disabled=$("scanDown").disabled=$("scanUp").disabled=!visibleStations.length;
-  if(!visibleStations.length){freq.textContent=activeBand==="AM"?"AM — NO FEEDS":"SW — NO FEEDS";tunerName.textContent="No verified "+activeBand+" stream source loaded";favBtn.textContent="☆ SAVE";favBtn.disabled=true;return}favBtn.disabled=false;
+  if(!visibleStations.length){freq.textContent=activeBand==="AM"?"AM — NO FEEDS":activeBand==="SW"?"SW — NO FEEDS":"SCAN FOR STATIONS";tunerName.textContent="No verified "+activeBand+" stream source loaded";favBtn.textContent="☆ SAVE";favBtn.disabled=true;return}favBtn.disabled=false;
   const n=ix+1;freq.textContent=activeBand==="FM"?(87.5+((n-1)*0.2)%20).toFixed(1)+" MHz":"CH "+String(n).padStart(2,"0");
   tunerName.textContent=stations[visibleStations[ix]].name;
   updateFavorite();
@@ -174,6 +174,8 @@
  async function attachRadioMeter(){try{const AudioCtor=window.AudioContext||window.webkitAudioContext;if(!AudioCtor)return;if(!meterCtx||meterCtx.state==="closed"){meterCtx=new AudioCtor();meterSource=null;meterAnalyser=null;meterConnected=false}if(!meterSource)meterSource=meterCtx.createMediaElementSource(audio);if(!meterAnalyser){meterAnalyser=meterCtx.createAnalyser();meterAnalyser.fftSize=128;meterData=new Uint8Array(meterAnalyser.frequencyBinCount)}if(!meterConnected){meterSource.connect(meterAnalyser);meterAnalyser.connect(meterCtx.destination);meterConnected=true}if(meterCtx.state==="suspended")await meterCtx.resume()}catch(e){console.warn("FM audio meter unavailable:",e)}}
 
  function say(t){status.textContent=t}
+ audio.addEventListener("pause",()=>{playLed.classList.remove("on");signalLed.classList.remove("on")});
+ audio.addEventListener("playing",()=>{if(streamReady)playLed.classList.add("on")});
  function station(){return stations[select.value]||stations.vividh}
  function cleanupStream(){if(hls){hls.destroy();hls=null}audio.pause();audio.removeAttribute("src");audio.load();streamReady=false;radioPowerState(false)}
  function isHlsStream(url){return /\.m3u8(?:$|[?#])/i.test(url)}
@@ -206,7 +208,7 @@
  }
  function stopBridge(){
   const wasActive=bridging||!!bot;bridging=false;
-  if(processor)processor.onaudioprocess=null;
+  
   if(bot){try{bot.leave()}catch(e){}bot=null}
   $("radioBridgeBtn").disabled=!window.radioPowered;$("radioBridgeStopBtn").disabled=true;
   if(wasActive)say("Radio bridge stopped. PTT has priority; FM playback remains local.");
