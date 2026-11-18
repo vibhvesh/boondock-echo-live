@@ -129,14 +129,14 @@
   });
  }
  async function scanAllStations(){
-  if(scanRunning)return;scanRunning=true;const generation=++scanGeneration;
+  if(scanRunning)return;scanRunning=true;$("radioScanNow").disabled=true;const generation=++scanGeneration;
   const ids=stationIds.slice();let done=0,green=0,yellow=0,red=0;
   ids.forEach(id=>{feedState[id]="checking"});renderStationButtons();
   scanProgress.textContent="Checking "+ids.length+" streams in the background…";
   let cursor=0;
   async function worker(){while(cursor<ids.length&&generation===scanGeneration){const id=ids[cursor++];const state=await probeStation(id,generation);if(generation!==scanGeneration)return;feedState[id]=state;done++;if(state==="green")green++;else if(state==="yellow")yellow++;else red++;renderStationButtons();scanProgress.textContent="Scanned "+done+"/"+ids.length+" · Green "+green+" · Yellow "+yellow+" · Red "+red;}}
   await Promise.all([worker(),worker(),worker()]);
-  if(generation===scanGeneration){scanRunning=false;populateVerifiedSelect();renderStationButtons();scanProgress.textContent="Scan complete · "+green+" verified and listed · "+yellow+" uncertain (hidden) · "+red+" unavailable (hidden). Auto-rescan in 5 minutes."}
+  if(generation===scanGeneration){scanRunning=false;$("radioScanNow").disabled=false;populateVerifiedSelect();renderStationButtons();scanProgress.textContent="Scan complete · "+green+" verified and listed · "+yellow+" uncertain (hidden) · "+red+" unavailable (hidden). Auto-rescan in 5 minutes."}
  }
 
  const isFM=id=>/fm|rainbow|vividh|vbs|indraprastha|aaradhana/i.test(stations[id].name);
@@ -146,7 +146,7 @@
   const ix=Math.max(0,visibleStations.indexOf(select.value));
   dial.max=Math.max(0,visibleStations.length-1);dial.value=ix;
   bandLabel.textContent=activeBand==="ALL"?"ALL INTERNET RADIO STREAMS":activeBand+" BAND";
-  $("tuneDown").disabled=$("tuneUp").disabled=$("scanDown").disabled=$("scanUp").disabled=!visibleStations.length;
+  $("tuneDown").disabled=$("tuneUp").disabled=!visibleStations.length;$("scanDown").disabled=$("scanUp").disabled=!visibleStations.length||scanBusy;
   if(!visibleStations.length){freq.textContent=activeBand==="AM"?"AM — NO FEEDS":activeBand==="SW"?"SW — NO FEEDS":"SCAN FOR STATIONS";tunerName.textContent="No verified "+activeBand+" stream source loaded";favBtn.textContent="☆ SAVE";favBtn.disabled=true;return}favBtn.disabled=false;
   const n=ix+1;freq.textContent=activeBand==="FM"?(87.5+((n-1)*0.2)%20).toFixed(1)+" MHz":"CH "+String(n).padStart(2,"0");
   tunerName.textContent=stations[visibleStations[ix]].name;
@@ -196,15 +196,15 @@
  }
  async function scanBand(dir){
   if(scanBusy)return; if(!visibleStations.length){say("No "+activeBand+" stream sources are available to scan.");return}
-  scanBusy=true;const start=visibleStations.indexOf(select.value);let i=start<0?(dir>0?-1:0):start;
+  scanBusy=true;refreshTuner();const start=visibleStations.indexOf(select.value);let i=start<0?(dir>0?-1:0):start;
   say("Scanning "+activeBand+" band for a playable stream…");
   for(let n=0;n<visibleStations.length;n++){
    i=(i+dir+visibleStations.length)%visibleStations.length;
    chooseStation(visibleStations[i],false);
-   const ok=await playRadio();
-   if(ok){say("Signal found · "+station().name+" · saved as last station");scanBusy=false;return}
+   let ok=false;try{ok=await playRadio()}catch(e){say("Could not test "+station().name+": "+e.message)}
+   if(ok){say("Signal found · "+station().name+" · saved as last station");scanBusy=false;refreshTuner();return}
   }
-  say("Scan complete: no playable stream found in "+activeBand+". Try another band or scan later.");scanBusy=false;
+  say("Scan complete: no playable stream found in "+activeBand+". Try another band or scan later.");scanBusy=false;refreshTuner();
  }
  function stopBridge(){
   const wasActive=bridging||!!bot;bridging=false;
