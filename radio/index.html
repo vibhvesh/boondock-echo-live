@@ -432,7 +432,7 @@ var sstvTxP=document.getElementById('sstvTx');function sstvTx0(){sstvSend.disabl
 sstvCancel.onclick=function(){if(sstvTx){sstvTx=false;return}sstvTxP.style.display='none'};
 sstvSend.onclick=function(){if(sstvTx)return;if(!window.radioPowered||!radio||!radio.name)return alert('Power on Boondock Echo before sending SSTV.');var f=radio.floor;if(f&&f.id!==radio.id)return alert('Channel busy');sstvSend.disabled=true;sstvSt.textContent='Claiming channel…';unlockAudio();
  radio.claim(function(ok){if(!ok){sstvSend.disabled=false;sstvSt.textContent='Channel busy — try again';return}
-  sstvTx=true;granted=true;render();var g=sstvPrev.getContext('2d'),px=g.getImageData(0,0,320,240).data,pcm=SSTV.encode(px,RATE);
+  sstvTx=true;window.dispatchEvent(new Event('boondock:sstv-start'));granted=true;render();var g=sstvPrev.getContext('2d'),px=g.getImageData(0,0,320,240).data,pcm=SSTV.encode(px,RATE);
   radio.sendSstv({t:'sstv',mode:'Robot36',w:320,h:240,dur:pcm.length/RATE,jpeg:sstvPrev.toDataURL('image/jpeg',0.9)});
   var it=sstvNew(radio.name,true);it.cv.getContext('2d').drawImage(sstvPrev,0,0);it.st='📡 sending Robot36… 0%';sstvItem(it);
   var pos=0,t0=performance.now(),CH=1024;(function pump(){if(!sstvTx||!radio.talking){fin('stopped');return}
