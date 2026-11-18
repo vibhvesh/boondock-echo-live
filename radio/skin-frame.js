@@ -73,8 +73,8 @@
     #ptt{position:relative;z-index:3;width:min(76vw,285px)!important;height:min(76vw,285px)!important;border-radius:50%!important;background:radial-gradient(circle at 35% 25%,#ffb18c,#df4a22 48%,#7e1b0c)!important;border:7px solid #52180f!important;box-shadow:0 0 0 3px #f1d3c3,0 9px 20px #310d08aa,inset 0 -10px 15px #4a100a99!important}
     #ptt.on{background:radial-gradient(circle at 35% 25%,#ffc4b9,#ed3024 48%,#7d0909)!important}
     #ptt.busy{background:radial-gradient(circle at 35% 25%,#fff0a6,#dc9a25 48%,#75400c)!important}
-    #boondockLteIndicators{position:relative;z-index:3;display:flex;justify-content:center;gap:13px;margin:12px auto 8px;flex-wrap:wrap}
-    #boondockLteIndicators .lte-indicator{display:flex;align-items:center;gap:8px;padding:6px 9px;border:1px solid #f3d7c766;border-radius:999px;background:#681b11aa;color:#f7e5dc;font:800 9px Arial,sans-serif;letter-spacing:.7px}
+    #boondockLteIndicators{position:relative;z-index:3;display:flex;flex-direction:column;align-items:flex-end;gap:10px;width:max-content;margin:8px 22px 8px auto;flex-wrap:nowrap}
+    #boondockLteIndicators .lte-indicator{display:flex;align-items:center;justify-content:space-between;gap:18px;width:88px;padding:0;border:0;border-radius:0;background:transparent;color:#f7e5dc;font:800 9px Arial,sans-serif;letter-spacing:.7px}#boondockLteIndicators .lte-indicator span:last-child{display:none}
     #boondockLteIndicators .lte-dot{width:18px;height:18px;border-radius:50%;background:#f0dfd6;box-shadow:inset 0 -2px 3px #a78b80,0 0 0 2px #f7d6c4}
     #boondockLteIndicators svg{width:19px;height:19px;stroke:#f7dfd4;fill:none;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
     #clientControls{position:relative;z-index:3}
@@ -92,6 +92,8 @@
         if (brand) {
           const indicators = doc.createElement("div");
           indicators.id = "boondockLteIndicators";
+          const heading = brand.querySelector("h1"); if (heading) heading.textContent = "BOONDOCK ECHO";
+          const subheading = brand.querySelector("small"); if (subheading) subheading.textContent = "LTE COMMUNICATIONS";
           indicators.innerHTML = '<div class="lte-indicator"><span class="lte-dot"></span><svg viewBox="0 0 24 24"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0M12 19h.01"/></svg><span>WI-FI</span></div><div class="lte-indicator"><span class="lte-dot"></span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M7 7a7 7 0 0 0 0 10M17 7a7 7 0 0 1 0 10M3.5 3.5a12 12 0 0 0 0 17M20.5 3.5a12 12 0 0 1 0 17"/></svg><span>LTE</span></div><div class="lte-indicator"><span class="lte-dot"></span><svg viewBox="0 0 24 24"><path d="M20 7v5a8 8 0 1 1-3-6M8 11l3 3 10-10"/></svg><span>LINK OK</span></div>';
           brand.after(indicators);
         }
