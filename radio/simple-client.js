@@ -42,10 +42,10 @@ if(sstvBtn)sstvBtn.remove();if(sstv)sstv.remove();
 const fm=$("radioLinesDev"),audio=$("radioLineAudio");fm.classList.remove("open");
 const fmBtn=document.createElement("button");fmBtn.id="simpleFM";fmBtn.type="button";fmBtn.textContent="FM RADIO";fmBtn.setAttribute("aria-expanded","false");top.querySelector("div:last-child").prepend(fmBtn);
 const fmHead=fm.querySelector("h3"),fmClose=document.createElement("button");fmClose.id="fmPanelClose";fmClose.type="button";fmClose.textContent="×";fmClose.setAttribute("aria-label","Close FM radio panel");fmHead.appendChild(fmClose);
-function closeFmPanel(){fm.classList.remove("open");fmBtn.setAttribute("aria-expanded","false");}
-fmBtn.onclick=()=>{drawer.classList.remove("open");const open=!fm.classList.contains("open");fm.classList.toggle("open",open);fmBtn.setAttribute("aria-expanded",String(open));if(open)fm.scrollIntoView({behavior:"smooth",block:"nearest"})};
+function closeFmPanel(){fm.classList.remove("open");fmBtn.textContent="FM RADIO";fmBtn.setAttribute("aria-expanded","false");}
+fmBtn.onclick=()=>{drawer.classList.remove("open");const open=!fm.classList.contains("open");fm.classList.toggle("open",open);fmBtn.textContent=open?"CLOSE FM":"FM RADIO";fmBtn.setAttribute("aria-expanded",String(open));if(open)fm.scrollIntoView({behavior:"smooth",block:"nearest"})};
 fmClose.onclick=closeFmPanel;
-if(audio)audio.addEventListener("play",()=>{closeFmPanel();drawer.classList.remove("open")});
+
 document.querySelector(".panel:has(#us)")?.remove();$("locp")?.remove();const logPanel=$("log")?.closest(".panel");if(logPanel)logPanel.style.display="none";
 const messages=document.createElement("section");messages.id="simpleMessages";messages.innerHTML='<div class="ribbon-head">LAST FIVE AUDIO MESSAGES</div><div id="recentAudioRibbons"><small>Waiting for radio traffic</small></div><div class="transcript-head"><b>MESSAGE TRANSCRIPTS</b><span id="whisperState">WHISPER · AUTO</span></div><div id="simpleTranscriptList"><small>Incoming messages appear here</small></div>';main.after(messages);
 const css=[
