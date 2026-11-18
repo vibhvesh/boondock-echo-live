@@ -24,7 +24,7 @@ ptt.textContent="POWER ON FIRST";ptt.setAttribute("aria-label","Power on the rad
 const pttDock=document.createElement("div");pttDock.id="simplePttDock";
 const pttHint=ptt.nextElementSibling&&ptt.nextElementSibling.classList.contains("hint")?ptt.nextElementSibling:null;
 pttDock.appendChild(ptt);if(pttHint)pttDock.appendChild(pttHint);
-const topRight=top.querySelector("div:last-child");topRight.classList.add("simple-top-right");topRight.insertBefore(pttDock,topRight.firstChild);
+const topRight=top.querySelector("div:last-child");topRight.classList.add("simple-top-right");const lcd=document.querySelector(".lcd");lcd.after(pttDock);
 
 login.style.display="none";go.style.display="none";main.style.display="block";main.insertBefore(name,main.firstChild);name.placeholder="Call sign";name.setAttribute("aria-label","Call sign");$("hd").style.display="none";
 const more=document.createElement("button");more.id="simpleMore";more.textContent="⋮";more.setAttribute("aria-label","More radio controls");top.querySelector("div:last-child").appendChild(more);const drawer=document.createElement("div");drawer.id="simpleMoreDrawer";drawer.innerHTML='<div class="more-head"><b>RADIO OPTIONS</b><button id="moreClose">×</button></div><label>CHANNEL<select id="simpleChannel"></select></label><label class="auto-row">AUTO POWER ON <input id="simpleAutoPower" type="checkbox"></label><small>FM pauses automatically during PTT.</small>';
@@ -45,11 +45,11 @@ $("sstvSend").textContent="OK · SEND";$("sstvCancel").textContent="CANCEL";wind
 if(sstvFile)document.body.appendChild(sstvFile);
 if(sstvBtn)sstvBtn.remove();if(sstv)sstv.remove();
 const fm=$("radioLinesDev"),audio=$("radioLineAudio");fm.classList.remove("open");
-const fmBtn=document.createElement("button");fmBtn.id="simpleFM";fmBtn.type="button";fmBtn.textContent="FM RADIO";fmBtn.setAttribute("aria-expanded","false");top.querySelector("div:last-child").prepend(fmBtn);
-top.querySelector("div:last-child").appendChild(pttDock);if(pttHint)pttHint.style.display="none";
+const fmBtn=document.createElement("button");fmBtn.id="simpleFM";fmBtn.type="button";fmBtn.textContent="FM RADIO";fmBtn.setAttribute("aria-expanded","false");rig.appendChild(fmBtn);
+if(pttHint)pttHint.style.display="none";
 const fmHead=fm.querySelector("h3"),fmClose=document.createElement("button");fmClose.id="fmPanelClose";fmClose.type="button";fmClose.textContent="×";fmClose.setAttribute("aria-label","Close FM radio panel");fmHead.appendChild(fmClose);
 function closeFmPanel(){fm.classList.remove("open");fmBtn.textContent="FM RADIO";fmBtn.setAttribute("aria-expanded","false");}
-fmBtn.onclick=()=>{drawer.classList.remove("open");const open=!fm.classList.contains("open");fm.classList.toggle("open",open);fmBtn.textContent=open?"CLOSE FM":"FM RADIO";fmBtn.setAttribute("aria-expanded",String(open));if(open)fm.scrollIntoView({behavior:"smooth",block:"nearest"})};
+fmBtn.onclick=()=>{drawer.classList.remove("open");const open=!fm.classList.contains("open");fm.classList.toggle("open",open);fmBtn.textContent=open?"CLOSE FM":"FM RADIO";fmBtn.setAttribute("aria-expanded",String(open))};
 fmClose.onclick=closeFmPanel;
 
 document.querySelector(".panel:has(#us)")?.remove();$("locp")?.remove();const logPanel=$("log")?.closest(".panel");if(logPanel)logPanel.style.display="none";
@@ -84,7 +84,11 @@ const css=[
 "#sstvPick{display:none;margin-top:8px;gap:6px}#sstvPick.open{display:grid;grid-template-columns:1fr 1fr}#sstvPick b{grid-column:1/-1;font:800 10px Arial;color:#f5d5c8}#sstvPick button{padding:9px;background:#e9c8b8;color:#51170e;font:800 11px Arial}",
 "#simpleMoreDrawer label{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:9px 0;font:11px Arial}#simpleMoreDrawer select{max-width:145px;min-height:34px!important;font-size:11px!important}",
 "#simpleMoreDrawer input{width:18px;height:18px}#simpleSstv{width:100%;padding:9px;background:#e9c8b8;color:#51170e;font:800 11px Arial}",
-"#radioLinesDev{display:none!important;position:fixed!important;z-index:24!important;left:8px!important;right:8px!important;bottom:52px!important;top:auto!important;max-height:65dvh!important;overflow:auto!important;margin:0!important;background:#3e170f!important}",
+"#radioLinesDev{display:block!important;position:fixed!important;z-index:45!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;height:min(68dvh,560px)!important;max-height:68dvh!important;overflow:auto!important;margin:0!important;padding:14px 12px 76px!important;background:#3e170f!important;border-radius:18px 18px 0 0!important;box-shadow:0 -12px 36px #000b!important;transform:translateY(110%);visibility:hidden;transition:transform .28s ease,visibility .28s ease!important}",
+"#radioLinesDev.open{transform:translateY(0)!important;visibility:visible!important}",
+"#simpleFM{position:fixed!important;z-index:46!important;left:50%!important;bottom:calc(8px + env(safe-area-inset-bottom))!important;transform:translateX(-50%)!important;width:calc(100% - 20px)!important;max-width:500px!important;height:44px!important;border-radius:14px!important;background:linear-gradient(#f2c8ae,#d99c7e)!important;color:#45170f!important;font:900 12px Arial!important;box-shadow:0 3px 12px #0008!important}",
+"#simplePttDock{display:flex;flex:0 0 auto;align-items:center;justify-content:center;min-height:0;padding:2px 0;margin:2px auto 4px}",
+"#simplePttDock #ptt{width:min(40vw,190px)!important;height:min(40vw,190px)!important;min-width:142px!important;min-height:142px!important;max-width:190px!important;max-height:190px!important;margin:0 auto!important;flex:0 0 auto!important;font-size:17px!important}",
 "#radioLinesDev.open{display:block!important}#radioLinesDev .radio-scan{max-height:140px;overflow:auto}",
 "#sstvP,#locp,.panel:has(#us),.panel:has(#log),#net{display:none!important}",
 "#sstvP.simple-sstv.open{display:block!important;position:fixed!important;z-index:40!important;left:10px!important;right:10px!important;bottom:54px!important;max-height:65dvh!important;overflow:auto!important;background:#5d1a11!important;color:#fff0e8!important;padding:10px!important;border:1px solid #f0cbbb!important;border-radius:12px!important}",
