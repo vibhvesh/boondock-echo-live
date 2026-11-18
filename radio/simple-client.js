@@ -23,12 +23,12 @@ channels.forEach(([v,n])=>$("simpleChannel").add(new Option(n,v)));$("simpleChan
 $("simpleChannel").onchange=()=>{const u=new URL(location.href);u.searchParams.set("ch",$("simpleChannel").value);location.href=u.href};
 const auto=$("simpleAutoPower");auto.checked=localStorage.getItem("sanketptt.autoPower")!=="off";auto.onchange=()=>localStorage.setItem("sanketptt.autoPower",auto.checked?"on":"off");
 more.onclick=()=>{drawer.classList.toggle("open");$("radioLinesDev").classList.remove("open")};$("moreClose").onclick=()=>drawer.classList.remove("open");
-const sstvPick=document.createElement("div");sstvPick.id="sstvPick";sstvPick.innerHTML='<button id="sstvBrowse">BROWSE</button><button id="sstvTake">CAMERA</button>';
-$("sstvBrowse").onclick=()=>{drawer.classList.remove("open");$("sstvFile").removeAttribute("capture");$("sstvFile").click()};
-$("sstvTake").onclick=()=>{drawer.classList.remove("open");$("sstvFile").setAttribute("capture","environment");$("sstvFile").click()};
-$("simpleSstv").onclick=()=>{sstvPick.classList.toggle("open")};
 const sstv=$("sstvP"),sstvBtn=$("sstvBtn"),sstvFile=$("sstvFile");
 const sstvRow=document.createElement("div");sstvRow.id="simpleSstvRow";sstvRow.innerHTML='<span>SSTV SEND</span><button id="sstvBrowse">BROWSE</button><button id="sstvTake">CAMERA</button>';main.after(sstvRow);
+$("sstvBrowse").onclick=()=>{drawer.classList.remove("open");sstvFile.removeAttribute("capture");sstvFile.click()};
+$("sstvTake").onclick=()=>{drawer.classList.remove("open");sstvFile.setAttribute("capture","environment");sstvFile.click()};
+$("simpleSstv").onclick=()=>$("sstvBrowse").click();
+
 const sstvModal=document.createElement("div");sstvModal.id="simpleSstvModal";sstvModal.innerHTML='<div class="sstv-modal-head"><b>REVIEW IMAGE</b><button id="sstvModalClose" aria-label="Close">×</button></div>';sstvModal.appendChild($("sstvTx"));rig.appendChild(sstvModal);
 $("sstvModalClose").onclick=()=>{$("sstvTx").style.display="none";sstvModal.classList.remove("open")};
 $("sstvBrowse").onclick=()=>{sstvFile.removeAttribute("capture");sstvFile.click()};
