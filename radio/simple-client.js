@@ -161,13 +161,63 @@ let asr=null,asrLoading=null,queue=Promise.resolve();const done=new Set(),texts=
 async function loadWhisper(){if(asr)return asr;if(asrLoading)return asrLoading;$("whisperState").textContent="WHISPER · LOADING";asrLoading=import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.5").then(T=>T.pipeline("automatic-speech-recognition","onnx-community/whisper-base",{dtype:"q8"})).then(p=>{asr=p;$("whisperState").textContent="WHISPER · ON DEVICE";return p}).catch(e=>{$("whisperState").textContent="WHISPER · UNAVAILABLE";throw e});return asrLoading}
 const sqlInput=$("simpleSquelchLevel");if(sqlInput){sqlInput.value=localStorage.getItem("sanketptt.squelch")||"0";$("simpleSquelchValue").textContent=sqlInput.value;sqlInput.oninput=()=>{$("simpleSquelchValue").textContent=sqlInput.value;localStorage.setItem("sanketptt.squelch",sqlInput.value)}}
 function wavFloat(wav){const v=new DataView(wav),n=v.getUint32(40,true)/2,rate=v.getUint32(24,true),src=new Float32Array(n);for(let i=0;i<n;i++)src[i]=v.getInt16(44+i*2,true)/32768;const m=Math.floor(n*16000/rate),out=new Float32Array(m);for(let i=0;i<m;i++){const x=i*rate/16000,j=Math.floor(x),f=x-j;out[i]=src[j]*(1-f)+(src[Math.min(j+1,n-1)]||0)*f}return out}
-function drawMessages(entries){const recent=$("recentAudioRibbons"),list=$("simpleTranscriptList");const incoming=entries.filter(e=>!e.mine);const last=incoming.slice(0,5);recent.innerHTML=last.length?"":'<small class="empty-ribbon">Waiting for incoming audio</small>';last.forEach(e=>{const b=document.createElement("button");b.className="audio-ribbon";b.innerHTML="<b></b><small></small>";b.querySelector("b").textContent=e.name||"Radio";b.querySelector("small").textContent=new Date(e.t0).toLocaleTimeString();b.onclick=()=>new Audio(URL.createObjectURL(new Blob([e.wav],{type:"audio/wav"}))).play().catch(()=>{});recent.appendChild(b)});list.innerHTML=incoming.length?"":'<small class="empty-transcript">Incoming messages appear here</small>';incoming.forEach(e=>{const item=document.createElement("article");item.className="transcript-item";const meta=document.createElement("div");meta.className="transcript-meta";const who=document.createElement("span");who.textContent=e.name||"Radio";const tm=document.createElement("time");tm.textContent=new Date(e.t0).toLocaleTimeString();meta.append(who,tm);const body=document.createElement("div");body.className="transcript-text";body.textContent=texts.get(e.key)||"Transcribing locally with Whisper…";item.append(meta,body);list.appendChild(item);if(!done.has(e.key)){done.add(e.key);queue=queue.then(async()=>{try{const pipe=await loadWhisper(),r=await pipe(wavFloat(e.wav),{task:"transcribe",chunk_length_s:30,stride_length_s:5});texts.set(e.key,(r.text||"").trim()||"No speech detected")}catch(err){texts.set(e.key,"Whisper unavailable: "+err.message)}drawMessages(window.rec?rec.entries:[])})}})}
+let messagePlayer=null,messagePlayerUrl=null,messagePlayerButton=null;
+function stopMessagePlayback(){
+ if(messagePlayer){messagePlayer.pause();messagePlayer.src="";messagePlayer=null}
+ if(messagePlayerUrl){URL.revokeObjectURL(messagePlayerUrl);messagePlayerUrl=null}
+ if(messagePlayerButton){messagePlayerButton.textContent="▶ PLAY";messagePlayerButton.classList.remove("playing")}
+ messagePlayerButton=null;
+}
+function playMessage(e,button){
+ if(messagePlayerButton===button&&messagePlayer&&!messagePlayer.paused){stopMessagePlayback();return}
+ stopMessagePlayback();
+ messagePlayerUrl=URL.createObjectURL(new Blob([e.wav],{type:"audio/wav"}));
+ messagePlayer=new Audio(messagePlayerUrl);messagePlayerButton=button;
+ button.textContent="■ STOP";button.classList.add("playing");
+ messagePlayer.onended=stopMessagePlayback;
+ messagePlayer.onerror=stopMessagePlayback;
+ messagePlayer.play().catch(err=>{stopMessagePlayback();console.warn("Message playback failed:",err)});
+}
+function drawMessages(entries){
+ const recent=$("recentAudioRibbons"),list=$("simpleTranscriptList");
+ const ordered=entries.slice().sort((a,b)=>b.t0-a.t0),last=ordered.slice(0,5);
+ recent.innerHTML=last.length?"":'<small class="empty-ribbon">No recorded messages yet</small>';
+ last.forEach(e=>{
+  const b=document.createElement("button");b.type="button";b.className="audio-ribbon"+(e.mine?" mine":"");
+  const who=document.createElement("b");who.textContent=(e.name||"Radio")+(e.mine?" · YOU":"");
+  const tm=document.createElement("small");tm.textContent=new Date(e.t0).toLocaleTimeString();
+  const action=document.createElement("span");action.className="ribbon-play";action.textContent="▶ PLAY";
+  b.append(who,tm,action);b.onclick=()=>playMessage(e,action);recent.appendChild(b);
+ });
+ list.innerHTML=ordered.length?"":'<small class="empty-transcript">Your sent and received messages will appear here</small>';
+ ordered.forEach(e=>{
+  const item=document.createElement("article");item.className="transcript-item"+(e.mine?" mine":"");
+  const meta=document.createElement("div");meta.className="transcript-meta";
+  const who=document.createElement("span");who.textContent=(e.name||"Radio")+(e.mine?" · YOU":"");
+  const right=document.createElement("span");right.style.display="flex";right.style.alignItems="center";right.style.gap="8px";
+  const tm=document.createElement("time");tm.textContent=new Date(e.t0).toLocaleTimeString();
+  const play=document.createElement("button");play.type="button";play.className="message-play";play.textContent="▶ PLAY";play.onclick=()=>playMessage(e,play);
+  right.append(tm,play);meta.append(who,right);
+  const body=document.createElement("div");body.className="transcript-text";body.textContent=texts.get(e.key)||"Transcribing locally with Whisper…";
+  item.append(meta,body);list.appendChild(item);
+  if(!done.has(e.key)){
+   done.add(e.key);
+   queue=queue.then(async()=>{
+    try{const pipe=await loadWhisper(),r=await pipe(wavFloat(e.wav),{task:"transcribe",chunk_length_s:30,stride_length_s:5});texts.set(e.key,(r.text||"").trim()||"No speech detected")}
+    catch(err){texts.set(e.key,"Whisper unavailable: "+err.message)}
+    drawMessages(window.rec?rec.entries:[]);
+   });
+  }
+ });
+}
+
 if(window.rec){rec.onChange=entries=>{renderLog(entries);drawMessages(entries)};drawMessages(rec.entries||[])}
 let fmWasPlaying=false,busy=false;function pauseFm(){if(audio&&!audio.paused){fmWasPlaying=true;audio.pause()}}
 const oldDown=window.down;if(oldDown)window.down=function(e){pauseFm();return oldDown(e)};
 setInterval(()=>{if(!window.radio)return;const f=radio.floor,active=!!(f&&(f.id!==radio.id||radio.talking));if(active&&!busy)pauseFm();if(!active&&busy&&fmWasPlaying&&audio){fmWasPlaying=false;audio.play().catch(()=>{})}busy=active},180);
 
 
+const playbackStyle=document.createElement("style");playbackStyle.textContent=`.audio-ribbon{display:flex!important;flex-direction:column!important;justify-content:center;gap:3px}.audio-ribbon .ribbon-play{font-weight:800;color:#ffe3a8;font-size:9px}.audio-ribbon.mine,.transcript-item.mine{border-color:#f5c77a88;background:#7c301c}.message-play{border:1px solid #f0cbbb88;border-radius:6px;background:#702316;color:#ffe9df;padding:3px 7px;font:800 9px Arial}.message-play.playing,.ribbon-play.playing{background:#a34a24;color:#fff}`;document.head.appendChild(playbackStyle);
 const unifiedUiStyle=document.createElement("style");unifiedUiStyle.textContent=`#simpleFM{min-width:66px!important}#fmPanelClose{margin-left:auto;width:30px;height:28px;border-radius:7px;background:#641b10;border:1px solid #f0cbbb;color:#ffe7dc;font:22px Arial;line-height:1}#radioLinesDev{top:76px!important;bottom:48px!important;max-height:calc(100dvh - 132px)!important;border-radius:14px!important;box-shadow:0 12px 34px #000b!important}#radioLinesDev.open{display:block!important}#radioLinesDev h3{display:flex;align-items:center;gap:8px}#radioLinesDev .radio-tuner #radioPowerBtn{font-size:15px!important}#radioLinesDev .radio-tuner #radioPowerBtn:before{content:"FM · "}#radioLinesDev .radio-tuner #radioPowerBtn{letter-spacing:1px}#radioLinesDev .band-row button:disabled{opacity:.4;filter:grayscale(1)}#radioLinesDev .rl-row button:disabled{opacity:.45}#simpleRadioTop button:focus-visible,#simpleSstvRow button:focus-visible{outline:2px solid #ffe5a8;outline-offset:2px}`;document.head.appendChild(unifiedUiStyle);
 if(typeof window.render==="function")window.render();
 setInterval(()=>{const powered=!!(window.radio&&radio.name);if(powerBtn&&!powerBtn.disabled&&radioPowered&&!powered)setRadioPower(false);if(!radioPowered&&ptt.textContent!=="POWER ON FIRST")ptt.textContent="POWER ON FIRST";if(powered&&radioPowered&&!holding&&!granted&&!(radio.floor&&radio.floor.id!==radio.id))ptt.textContent="HOLD TO TALK"},500);
