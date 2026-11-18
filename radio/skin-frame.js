@@ -21,6 +21,11 @@
       accent: "#f28a20", glow: "#f28a2055", ptt: "#a54a0c", ptt2: "#ef8618", font: "'Share Tech Mono', monospace",
       radius: "10px"
     },
+    boondockecho: {
+      bg: "#8f210f", frame: "#b83319", edge: "#e6cfc0", lcd: "#31150f", screen: "#f4dfd1",
+      accent: "#f2d8c9", glow: "#ffd8c044", ptt: "#8e260f", ptt2: "#e65b2b", font: "Arial, sans-serif",
+      radius: "22px"
+    },
     sonim: {
       bg: "#111318", frame: "#242831", edge: "#e4b72e", lcd: "#182b49", screen: "#d5e4ff",
       accent: "#e4b72e", glow: "#e4b72e55", ptt: "#29384f", ptt2: "#d4a91f", font: "Arial, sans-serif",
@@ -56,6 +61,25 @@
     ${skin === "kenwood" ? ".lcd{border-radius:5px!important}.freq{font-family:Arial,sans-serif!important;letter-spacing:2px!important}.rig{border-radius:12px!important}" : ""}
     ${skin === "baofeng" ? ".lcd{border-radius:3px!important;text-shadow:none!important}.freq{font-family:'Share Tech Mono',monospace!important}.panel h3{letter-spacing:1px!important}" : ""}
     ${skin === "sonim" ? ".rig{border:6px solid #d6aa26!important;box-shadow:0 0 0 3px #111,0 18px 42px #000c!important}.panel{border-radius:18px!important}#ptt{border-radius:50%!important;width:min(74vw,285px)!important;height:min(74vw,285px)!important;max-width:285px!important;max-height:285px!important;aspect-ratio:1/1!important}" : ""}
+    \${skin === "boondockecho" ? \`
+    .rig{position:relative!important;overflow:hidden!important;background:linear-gradient(155deg,#b83a1c 0%,#8f210f 58%,#6e180d)!important;border:5px solid #e7d2c5!important;box-shadow:0 0 0 3px #48140d,0 18px 42px #000b!important}
+    .rig:after{content:"";position:absolute;inset:150px -20px 20px;background-repeat:no-repeat;background-position:center bottom;background-size:100% 78%;opacity:.23;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 420' fill='none'%3E%3Cg stroke='%23f5d9c9' stroke-width='3' opacity='.9'%3E%3Cpath d='M-20 260 90 180 145 140 205 175 290 55 345 105 390 80 470 145 620 230'/%3E%3Cpath d='M-20 285 90 205 150 165 205 200 290 80 345 130 390 105 470 170 620 255'/%3E%3Cpath d='M35 330 120 260 175 245 230 275 300 170 365 210 420 185 500 245 620 300'/%3E%3Cpath d='M70 370 145 315 200 300 260 325 325 235 390 270 450 245 530 295 620 340'/%3E%3C/g%3E%3C/svg%3E")}
+    .brand{position:relative;z-index:2;min-height:74px!important;align-items:center!important}
+    .brand h1{font-family:Arial,sans-serif!important;font-size:clamp(20px,5vw,28px)!important;letter-spacing:2px!important;color:#f5dfd4!important;-webkit-text-fill-color:#f5dfd4!important;text-shadow:0 2px 2px #57190f!important}
+    .brand small{color:#f3cbb9!important;letter-spacing:2px!important}
+    .lcd{position:relative;z-index:2;background:linear-gradient(180deg,#38180f,#1d0e0a)!important;color:#f5d9c9!important;border-color:#6e2a19!important;text-shadow:0 0 8px #f4b9a0!important}
+    .panel{position:relative;z-index:2;background:#651b12dd!important;border:1px solid #efcbbb77!important}
+    .panel h3{color:#f4d8ca!important}
+    #ptt{position:relative;z-index:3;width:min(76vw,285px)!important;height:min(76vw,285px)!important;border-radius:50%!important;background:radial-gradient(circle at 35% 25%,#ffb18c,#df4a22 48%,#7e1b0c)!important;border:7px solid #52180f!important;box-shadow:0 0 0 3px #f1d3c3,0 9px 20px #310d08aa,inset 0 -10px 15px #4a100a99!important}
+    #ptt.on{background:radial-gradient(circle at 35% 25%,#ffc4b9,#ed3024 48%,#7d0909)!important}
+    #ptt.busy{background:radial-gradient(circle at 35% 25%,#fff0a6,#dc9a25 48%,#75400c)!important}
+    #boondockLteIndicators{position:relative;z-index:3;display:flex;justify-content:center;gap:13px;margin:12px auto 8px;flex-wrap:wrap}
+    #boondockLteIndicators .lte-indicator{display:flex;align-items:center;gap:8px;padding:6px 9px;border:1px solid #f3d7c766;border-radius:999px;background:#681b11aa;color:#f7e5dc;font:800 9px Arial,sans-serif;letter-spacing:.7px}
+    #boondockLteIndicators .lte-dot{width:18px;height:18px;border-radius:50%;background:#f0dfd6;box-shadow:inset 0 -2px 3px #a78b80,0 0 0 2px #f7d6c4}
+    #boondockLteIndicators svg{width:19px;height:19px;stroke:#f7dfd4;fill:none;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
+    #clientControls{position:relative;z-index:3}
+    #net{position:relative;z-index:3;color:#f3d4c7!important}
+    \` : ""}
   `;
   function apply() {
     try {
@@ -63,6 +87,15 @@
       if (!doc || !doc.head) return;
       let style = doc.getElementById("sanket-radio-skin");
       if (!style) { style = doc.createElement("style"); style.id = "sanket-radio-skin"; doc.head.appendChild(style); }
+      if (skin === "boondockecho" && !doc.getElementById("boondockLteIndicators")) {
+        const brand = doc.querySelector(".brand");
+        if (brand) {
+          const indicators = doc.createElement("div");
+          indicators.id = "boondockLteIndicators";
+          indicators.innerHTML = '<div class="lte-indicator"><span class="lte-dot"></span><svg viewBox="0 0 24 24"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0M12 19h.01"/></svg><span>WI-FI</span></div><div class="lte-indicator"><span class="lte-dot"></span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M7 7a7 7 0 0 0 0 10M17 7a7 7 0 0 1 0 10M3.5 3.5a12 12 0 0 0 0 17M20.5 3.5a12 12 0 0 1 0 17"/></svg><span>LTE</span></div><div class="lte-indicator"><span class="lte-dot"></span><svg viewBox="0 0 24 24"><path d="M20 7v5a8 8 0 1 1-3-6M8 11l3 3 10-10"/></svg><span>LINK OK</span></div>';
+          brand.after(indicators);
+        }
+      }
       style.textContent = css;
       doc.documentElement.style.background = t.bg;
     } catch (e) {}
