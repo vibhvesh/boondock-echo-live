@@ -291,8 +291,8 @@ log.onclick=function(ev){var b=ev.target.closest('button');if(!b)return;var k=+b
 clr.onclick=function(){if(player){player.pause();player=null;playingKey=null}rec.clear()};
 function render(){var f=st0.floor;count.textContent=st0.users.length;chlabel.textContent=radio.ch.toUpperCase();
  us.innerHTML=st0.users.map(function(u){var t=f&&f.id===u.id;return '<li class="'+(t?'tk':u.id===radio.id?'me':'')+'">'+(t?'🎙 ':'')+esc(u.name)+(u.id===radio.id?' ·YOU':'')+pinTxt(u)+'</li>'}).join('')||'<li class=none>No stations</li>';
- var busy=f&&f.id!==radio.id;ptt.className=granted?'on':busy?'busy':holding?'wait':'';ptt.textContent=granted?'ON AIR':busy?'BUSY':holding?'…':!radio.name?'POWER ON':'HOLD TO TALK';
- st.textContent=granted?'▲ TX · TRANSMITTING':f&&busy?'▼ RX · '+f.name:holding?'CLAIMING…':!radio.name?'READY TO JOIN':'STANDBY'}
+ var busy=f&&f.id!==radio.id;ptt.className=granted?'on':busy?'busy':holding?'wait':'';ptt.textContent=granted?'ON AIR':busy?'BUSY':holding?'…':!radio.name?'POWER ON FIRST':'HOLD TO TALK';
+ st.textContent=granted?'▲ TX · TRANSMITTING':f&&busy?'▼ RX · '+f.name:holding?'CLAIMING…':!radio.name?'POWER OFF':'STANDBY'}
 function start(){if(radio)radio.leave();radio=new Radio(mqtt,{ch:CHANNEL,on:function(k,v){if(k==='state'){var pf=st0.floor;st0=v;if(granted&&(!v.floor||v.floor.id!==radio.id)){granted=false}
   if(pf&&(!v.floor||v.floor.id!==pf.id)){rec.end();sstvEnd()}render()}
  else if(k==='sstv'){sstvMeta(v)}else if(k==='audio'){if(!window.radioPowered)return;var f=radio.floor;if(f)sstvFeed(f,v);if(sstvMute.checked&&sstvRx&&sstvRx.rx.started&&!sstvRx.rx.done){rxAt=Date.now();rec.feed(f.id,f.name,v,false,undefined,radio.users[f.id]&&radio.users[f.id].loc);return}rxAt=Date.now();rxLvl=Math.max(rxLvl,lvl(v));if(f){var fu=radio.users[f.id];rec.feed(f.id,f.name,v,false,undefined,fu&&fu.loc)}play(v)}else if(k==='net')net.textContent='relay: '+v+' · topic '+PTT_PREFIX+radio.ch}});radio.browser=true;render()}
