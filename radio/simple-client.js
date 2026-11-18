@@ -96,9 +96,9 @@ if(sstvFile)sstvFile.addEventListener("change",()=>{if(sstvFile.files&&sstvFile.
 $("sstvCancel")?.addEventListener("click",()=>{sstvModal.classList.remove("open");$("sstvTx").style.display="none"});
 const oldRender=window.render;window.render=function(){if(oldRender)oldRender();if(!window.radio||!radio.name){ptt.textContent="POWER ON FIRST";ptt.className="";$("st").textContent="POWER OFF"}else if(!holding&&!granted&&!(radio.floor&&radio.floor.id!==radio.id))ptt.textContent="HOLD TO TALK"};
 const powerBtn=$("radioPower"),powerText=$("radioPowerText");
-let radioPowered=false;
+let radioPowered=false;window.radioPowered=false;
 function setRadioPower(on){
- radioPowered=!!on;
+ radioPowered=!!on;window.radioPowered=radioPowered;
  powerBtn.classList.toggle("is-on",radioPowered);powerBtn.setAttribute("aria-pressed",String(radioPowered));powerBtn.setAttribute("aria-label",radioPowered?"Power off radio":"Power on radio");powerText.textContent=radioPowered?"ON":"OFF";
  if(ledPwr)ledPwr.classList.toggle("on",radioPowered);
  rig.classList.toggle("radio-powered",radioPowered);if(meterPanel)meterPanel.style.removeProperty("display");
