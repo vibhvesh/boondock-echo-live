@@ -8,7 +8,7 @@ const skins=[["boondockecho","Boondock Echo"],["motorola","Motorola"],["hytera",
 const top=document.createElement("div");top.id="simpleRadioTop";top.innerHTML='<div class="simple-channel"><i></i><b id="simpleChannelName"></b></div><div><select id="simpleSkin" aria-label="Radio skin"></select><button id="simpleClose" aria-label="Close radio">×</button></div>';
 rig.querySelector(".brand").after(top);
 skins.forEach(([v,n])=>$("simpleSkin").add(new Option(n,v)));$("simpleSkin").value=params.get("skin")||"boondockecho";
-$("simpleSkin").onchange=()=>{const u=new URL(location.href);u.searchParams.set("skin",$("simpleSkin").value);location.href=u.href};
+$("simpleSkin").onchange=()=>{try{const u=new URL(window.parent.location.href);u.searchParams.set("skin",$("simpleSkin").value);window.parent.location.href=u.href}catch(e){const u=new URL(location.href);u.searchParams.set("skin",$("simpleSkin").value);location.href=u.href}};
 $("simpleChannelName").textContent=(channels.find(x=>x[0]===ch)||channels[0])[1];
 $("simpleClose").onclick=()=>{try{radio&&radio.leave()}catch(e){}try{window.top.close()}catch(e){}setTimeout(()=>{try{window.top.location.replace("/boondock-echo-live/")}catch(e){history.back()}},150)};
 const login=$("login"),name=$("nm"),go=$("go"),main=$("main"),ptt=$("ptt");
