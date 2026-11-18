@@ -14,39 +14,46 @@ $("simpleClose").onclick=()=>{try{radio&&radio.leave()}catch(e){}try{window.top.
 const login=$("login"),name=$("nm"),go=$("go"),main=$("main"),ptt=$("ptt");
 ptt.textContent="POWER ON";ptt.setAttribute("aria-label","Power on and join radio channel");
 login.style.display="none";go.style.display="none";main.style.display="block";main.insertBefore(name,main.firstChild);name.placeholder="Call sign";name.setAttribute("aria-label","Call sign");$("hd").style.display="none";
-const more=document.createElement("button");more.id="simpleMore";more.textContent="MORE ⋯";const drawer=document.createElement("div");drawer.id="simpleMoreDrawer";drawer.innerHTML='<div class="more-head"><b>RADIO OPTIONS</b><button id="moreClose">×</button></div><label>CHANNEL<select id="simpleChannel"></select></label><label class="auto-row">AUTO POWER ON <input id="simpleAutoPower" type="checkbox"></label><button id="simpleSstv">SSTV IMAGE</button><small>FM pauses automatically during PTT.</small>';
-rig.append(more,drawer);
+const more=document.createElement("button");more.id="simpleMore";more.textContent="⋮";more.setAttribute("aria-label","More radio controls");top.querySelector("div:last-child").appendChild(more);const drawer=document.createElement("div");drawer.id="simpleMoreDrawer";drawer.innerHTML='<div class="more-head"><b>RADIO OPTIONS</b><button id="moreClose">×</button></div><label>CHANNEL<select id="simpleChannel"></select></label><label class="auto-row">AUTO POWER ON <input id="simpleAutoPower" type="checkbox"></label><button id="simpleSstv">SSTV IMAGE</button><small>FM pauses automatically during PTT.</small>';
+rig.append(drawer);
 channels.forEach(([v,n])=>$("simpleChannel").add(new Option(n,v)));$("simpleChannel").value=channels.some(x=>x[0]===ch)?ch:"virtual";
 $("simpleChannel").onchange=()=>{const u=new URL(location.href);u.searchParams.set("ch",$("simpleChannel").value);location.href=u.href};
 const auto=$("simpleAutoPower");auto.checked=localStorage.getItem("sanketptt.autoPower")!=="off";auto.onchange=()=>localStorage.setItem("sanketptt.autoPower",auto.checked?"on":"off");
 more.onclick=()=>{drawer.classList.toggle("open");$("radioLinesDev").classList.remove("open")};$("moreClose").onclick=()=>drawer.classList.remove("open");
-const sstvPick=document.createElement("div");sstvPick.id="sstvPick";sstvPick.innerHTML='<b>SSTV IMAGE</b><button id="sstvBrowse">BROWSE</button><button id="sstvTake">CAMERA</button>';drawer.appendChild(sstvPick);
+const sstvPick=document.createElement("div");sstvPick.id="sstvPick";sstvPick.innerHTML='<button id="sstvBrowse">BROWSE</button><button id="sstvTake">CAMERA</button>';
 $("sstvBrowse").onclick=()=>{drawer.classList.remove("open");$("sstvFile").removeAttribute("capture");$("sstvFile").click()};
 $("sstvTake").onclick=()=>{drawer.classList.remove("open");$("sstvFile").setAttribute("capture","environment");$("sstvFile").click()};
 $("simpleSstv").onclick=()=>{sstvPick.classList.toggle("open")};
-const sstv=$("sstvP"),sstvBtn=$("sstvBtn"),sstvFile=$("sstvFile");if(sstvFile)document.body.appendChild(sstvFile);
+const sstv=$("sstvP"),sstvBtn=$("sstvBtn"),sstvFile=$("sstvFile");
+const sstvRow=document.createElement("div");sstvRow.id="simpleSstvRow";sstvRow.innerHTML='<span>SSTV SEND</span><button id="sstvBrowse">BROWSE</button><button id="sstvTake">CAMERA</button>';main.after(sstvRow);
+const sstvModal=document.createElement("div");sstvModal.id="simpleSstvModal";sstvModal.innerHTML='<div class="sstv-modal-head"><b>REVIEW IMAGE</b><button id="sstvModalClose" aria-label="Close">×</button></div>';sstvModal.appendChild($("sstvTx"));rig.appendChild(sstvModal);
+$("sstvModalClose").onclick=()=>{$("sstvTx").style.display="none";sstvModal.classList.remove("open")};
+$("sstvBrowse").onclick=()=>{sstvFile.removeAttribute("capture");sstvFile.click()};
+$("sstvTake").onclick=()=>{sstvFile.setAttribute("capture","environment");sstvFile.click()};
+$("sstvSend").textContent="OK · SEND";$("sstvCancel").textContent="CANCEL";
+if(sstvFile)document.body.appendChild(sstvFile);
 if(sstv){sstv.querySelector("h3").textContent="SSTV IMAGE";sstv.querySelector("label")?.remove();sstvBtn.textContent="BROWSE IMAGE";sstvBtn.onclick=()=>{sstvFile.removeAttribute("capture");sstvFile.click()};const cam=document.createElement("button");cam.textContent="CAMERA";cam.id="sstvCamera";sstvBtn.after(cam);cam.onclick=()=>{sstvFile.setAttribute("capture","environment");sstvFile.click()}}
 const fm=$("radioLinesDev"),audio=$("radioLineAudio");fm.classList.remove("open");
-const fmBtn=document.createElement("button");fmBtn.id="simpleFM";fmBtn.textContent="FM RADIO";rig.appendChild(fmBtn);
-fmBtn.onclick=()=>{drawer.classList.remove("open");fm.classList.toggle("open");if(fm.classList.contains("open"))fm.scrollIntoView({behavior:"smooth",block:"start"})};
+const fmBtn=document.createElement("button");fmBtn.id="simpleFM";fmBtn.textContent="FM OFF";top.querySelector("div:last-child").prepend(fmBtn);
+fmBtn.onclick=()=>{drawer.classList.remove("open");fm.classList.toggle("open");fmBtn.textContent=fm.classList.contains("open")?"FM ON":"FM OFF";if(fm.classList.contains("open"))fm.scrollIntoView({behavior:"smooth",block:"start"})};
 if(audio)audio.addEventListener("play",()=>{fm.classList.remove("open");drawer.classList.remove("open")});
 document.querySelector(".panel:has(#us)")?.remove();$("locp")?.remove();const logPanel=$("log")?.closest(".panel");if(logPanel)logPanel.style.display="none";
 const messages=document.createElement("section");messages.id="simpleMessages";messages.innerHTML='<div class="ribbon-head">LAST FIVE AUDIO MESSAGES</div><div id="recentAudioRibbons"><small>Waiting for radio traffic</small></div><div class="transcript-head"><b>MESSAGE TRANSCRIPTS</b><span id="whisperState">WHISPER · AUTO</span></div><div id="simpleTranscriptList"><small>Incoming messages appear here</small></div>';main.after(messages);
 const css=[
-"body{padding:5px!important;background:#8f210f!important;overflow-x:hidden!important}",
-".rig{max-width:520px!important;min-height:calc(100dvh - 10px)!important;padding:10px!important;display:flex!important;flex-direction:column!important;gap:7px!important}",
-".brand{margin:0 5px!important;min-height:40px!important}",
-"#simpleRadioTop{display:flex;align-items:center;justify-content:space-between;padding:4px 5px}",
+"body{padding:0!important;background:#8f210f!important;overflow:hidden!important;height:100dvh!important}",
+".rig{width:100%!important;max-width:520px!important;height:100dvh!important;min-height:0!important;overflow:hidden!important;padding:6px 9px!important;display:flex!important;flex-direction:column!important;gap:4px!important;border-radius:0!important}",
+".brand{margin:0 5px!important;min-height:28px!important;max-height:28px!important;overflow:hidden!important}.brand h1{font-size:15px!important}",
+"#simpleRadioTop{display:flex;align-items:center;justify-content:space-between;padding:2px 4px;min-height:34px;flex:0 0 34px}",
 ".simple-channel{display:flex;align-items:center;gap:8px;color:#f8dfd4;font:800 11px Arial,sans-serif;letter-spacing:1px}",
 ".simple-channel i{width:9px;height:9px;border-radius:50%;background:#f1d8cc;box-shadow:0 0 0 2px #ffffff44}",
 "#simpleSkin{max-width:125px;min-height:30px!important;padding:4px!important;font:700 11px Arial!important;background:#6f1e12!important;color:#ffe8dd!important}",
 "#simpleClose{width:30px;height:30px;border-radius:50%;background:#55170e;color:#fff;font:22px Arial}",
-".lcd{padding:7px 10px!important;margin:0!important}.lcd .meter{display:none!important}#st{font-size:12px!important;min-height:16px!important}",
-"#main{display:flex!important;flex-direction:column!important;align-items:center!important;gap:4px!important;margin:0!important}",
+".lcd{padding:5px 8px!important;margin:0!important;flex:0 0 auto}.lcd .meter{display:block!important;margin-top:3px!important}.lcd .freq{font-size:clamp(19px,5vw,27px)!important;margin:1px 0!important;letter-spacing:1px!important}#st{font-size:10px!important;min-height:12px!important}.lcd .row{font-size:10px!important}.meter .lab{font-size:8px!important}.bars{height:8px!important;margin-top:1px!important}",
+"#main{display:flex!important;flex-direction:column!important;align-items:center!important;gap:2px!important;margin:0!important;flex:0 0 auto}",
 "#nm{width:100%!important;max-width:220px!important;min-height:34px!important;padding:6px!important;margin:0!important;text-align:center!important;background:#4f180f!important;color:#fff!important}",
-"#ptt{width:min(66vw,250px)!important;height:min(66vw,250px)!important;max-width:250px!important;max-height:250px!important;aspect-ratio:1!important;margin:5px auto!important;border-radius:50%!important;font-size:19px!important;font-weight:900!important;touch-action:none!important}",
+"#ptt{width:min(29vw,168px)!important;height:min(29vw,168px)!important;min-width:118px!important;min-height:118px!important;max-width:168px!important;max-height:168px!important;aspect-ratio:1!important;margin:2px auto!important;border-radius:50%!important;font-size:17px!important;font-weight:900!important;touch-action:none!important;flex:0 0 auto}",
 "#main .hint{color:#f4d4c7!important;font:10px Arial!important}",
-"#simpleMessages{height:50dvh;min-height:190px;max-height:50dvh;display:flex;flex-direction:column;overflow:hidden;border:1px solid #f0cbbb88;border-radius:12px;background:#5d1a11dd;color:#fff0e8;padding:7px;gap:5px}",
+"#simpleMessages{height:47dvh;min-height:0;max-height:none;flex:1 1 auto;display:flex;flex-direction:column;overflow:hidden;border:1px solid #f0cbbb88;border-radius:12px;background:#5d1a11dd;color:#fff0e8;padding:7px;gap:5px}",
 ".ribbon-head,.transcript-head{display:flex;justify-content:space-between;align-items:center;font:800 9px Arial;letter-spacing:1px;color:#f5d5c8}",
 "#recentAudioRibbons{display:flex;gap:5px;overflow-x:auto;min-height:40px;padding-bottom:3px}",
 ".audio-ribbon{flex:0 0 92px;min-width:92px;border:1px solid #f2cdbb66;border-radius:8px;background:#7a2416;color:#fff1e9;padding:5px;font:10px Arial;text-align:left}",
@@ -54,8 +61,8 @@ const css=[
 "#simpleTranscriptList{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}",
 ".transcript-item{padding:7px 5px;border-bottom:1px solid #f0d2c322;font:12px/1.4 Arial}.transcript-meta{display:flex;justify-content:space-between;color:#f3c6b2;font-size:9px;margin-bottom:3px}.transcript-text{color:#fff3ed;white-space:pre-wrap;overflow-wrap:anywhere}",
 "#whisperState{font-size:8px;color:#f7d5c8}.empty-ribbon,.empty-transcript{font:11px Arial;color:#f0cdbf88;padding:8px}",
-"#simpleMore,#simpleFM{position:fixed;z-index:25;bottom:10px;width:84px;height:34px;border-radius:18px;background:#641b10;border:1px solid #f0cbbb;color:#ffe7dc;font:800 10px Arial;box-shadow:0 3px 10px #0005}",
-"#simpleMore{left:10px}#simpleFM{right:10px}",
+"#simpleMore,#simpleFM{position:static;z-index:25;width:auto;min-width:42px;height:30px;padding:0 9px;border-radius:8px;background:#641b10;border:1px solid #f0cbbb;color:#ffe7dc;font:800 10px Arial;box-shadow:0 2px 5px #0005}",
+"#simpleMore{font-size:18px;min-width:30px;padding:0}#simpleFM{min-width:56px}",
 "#simpleMoreDrawer{display:none;position:fixed;z-index:30;left:10px;bottom:52px;width:min(270px,calc(100vw - 20px));padding:12px;background:#58180f;border:1px solid #f0cbbb;border-radius:12px;box-shadow:0 10px 28px #0009;color:#ffeadf}",
 "#simpleMoreDrawer.open{display:block}.more-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font:800 11px Arial}",
 "#sstvPick{display:none;margin-top:8px;gap:6px}#sstvPick.open{display:grid;grid-template-columns:1fr 1fr}#sstvPick b{grid-column:1/-1;font:800 10px Arial;color:#f5d5c8}#sstvPick button{padding:9px;background:#e9c8b8;color:#51170e;font:800 11px Arial}",
@@ -65,11 +72,11 @@ const css=[
 "#radioLinesDev.open{display:block!important}#radioLinesDev .radio-scan{max-height:140px;overflow:auto}",
 "#sstvP,#locp,.panel:has(#us),.panel:has(#log),#net{display:none!important}",
 "#sstvP.simple-sstv.open{display:block!important;position:fixed!important;z-index:40!important;left:10px!important;right:10px!important;bottom:54px!important;max-height:65dvh!important;overflow:auto!important;background:#5d1a11!important;color:#fff0e8!important;padding:10px!important;border:1px solid #f0cbbb!important;border-radius:12px!important}",
-"@media(max-height:650px){#ptt{width:min(48vw,190px)!important;height:min(48vw,190px)!important}#simpleMessages{height:43dvh;max-height:43dvh}}"
+"#simpleSstvRow{display:flex;align-items:center;gap:6px;flex:0 0 36px;min-height:36px;padding:3px 5px;border:1px solid #f0cbbb88;border-radius:9px;background:#5d1a11;color:#ffe9df;font:800 9px Arial;letter-spacing:1px}#simpleSstvRow span{flex:1}#simpleSstvRow button{height:28px;min-width:82px;background:#e9c8b8;color:#51170e;border-radius:7px;font:800 10px Arial}#simpleSstvModal{display:none;position:fixed;z-index:60;inset:0;background:#180b09ed;align-items:center;justify-content:center;padding:16px}#simpleSstvModal.open{display:flex}#simpleSstvModal #sstvTx{display:block!important;width:min(94vw,390px);max-height:90dvh;overflow:auto;background:#5d1a11;padding:10px;border:1px solid #f0cbbb;border-radius:12px}#simpleSstvModal canvas{width:100%!important;height:auto!important}.sstv-modal-head{display:flex;justify-content:space-between;align-items:center;color:#ffe9df;font:800 12px Arial;margin-bottom:8px}.sstv-modal-head button{background:#7b291b;color:white;padding:6px 10px}#simpleMoreDrawer{top:72px;bottom:auto;max-height:75dvh;overflow:auto}#simpleMoreDrawer.open{display:block}#simpleRadioTop>div:last-child{display:flex;align-items:center;gap:5px}@media(max-height:720px){#ptt{width:min(25vw,142px)!important;height:min(25vw,142px)!important;min-width:105px!important;min-height:105px!important}#simpleMessages{height:auto;min-height:0}#nm{min-height:28px!important;font-size:14px!important}#main .hint{display:none!important}}",
 ].join("\n");
 const style=document.createElement("style");style.id="simpleRadioStyles";style.textContent=css;document.head.appendChild(style);
-if(sstvFile)sstvFile.addEventListener("change",()=>{if(sstvFile.files&&sstvFile.files.length){sstv.classList.add("open");drawer.classList.remove("open")}});
-$("sstvCancel")?.addEventListener("click",()=>sstv.classList.remove("open"));
+if(sstvFile)sstvFile.addEventListener("change",()=>{if(sstvFile.files&&sstvFile.files.length){sstvModal.classList.add("open");$("sstvTx").style.display="block";drawer.classList.remove("open")}});
+$("sstvCancel")?.addEventListener("click",()=>{sstvModal.classList.remove("open");$("sstvTx").style.display="none"});
 ptt.addEventListener("pointerdown",e=>{if(!window.radio||!radio.name){e.preventDefault();e.stopImmediatePropagation();if(!name.value.trim()){name.focus();return}go.click()}},true);
 ptt.addEventListener("click",e=>{if(!window.radio||!radio.name){e.preventDefault();e.stopImmediatePropagation();if(name.value.trim())go.click();else name.focus()}},true);
 const oldRender=window.render;window.render=function(){if(oldRender)oldRender();if(!window.radio||!radio.name){ptt.textContent="POWER ON";ptt.className="";$("st").textContent="READY TO JOIN"}else if(!holding&&!granted&&!(radio.floor&&radio.floor.id!==radio.id))ptt.textContent="HOLD TO TALK"};
