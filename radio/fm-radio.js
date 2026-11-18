@@ -180,7 +180,7 @@
  function cleanupStream(){if(hls){hls.destroy();hls=null}audio.pause();audio.removeAttribute("src");audio.load();streamReady=false;radioPowerState(false)}
  function isHlsStream(url){return /\.m3u8(?:$|[?#])/i.test(url)}
  async function playRadio(){
-  const st=station();cleanupStream();audio.crossOrigin="anonymous";await attachRadioMeter();
+  const st=station();cleanupStream();audio.crossOrigin="anonymous";
   say("Tuning "+st.name+"…");
   return await new Promise(resolve=>{
    let settled=false,timer=setTimeout(()=>finish(false,"No stream response from "+st.name),12000);
