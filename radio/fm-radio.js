@@ -168,7 +168,7 @@
  const powerBtn=$("radioPowerBtn"),powerLed=$("radioPowerLed"),playLed=$("radioPlayLed"),signalLed=$("radioSignalLed"),radioBars=$("radioBars");
  const meterBars=Array.from({length:24},()=>{const b=document.createElement("b");radioBars.appendChild(b);return b});
  let meterCtx=null,meterAnalyser=null,meterSource=null,meterData=null,meterFrame=0;
- function radioPowerState(on){powerBtn.classList.toggle("on",on);powerBtn.textContent=on?"⏻ POWER OFF":"⏻ POWER ON";powerBtn.setAttribute("aria-pressed",String(on));powerLed.classList.toggle("on",on);playLed.classList.toggle("on",on&&streamReady);signalLed.classList.toggle("on",on&&streamReady&&!audio.paused)}
+ function radioPowerState(on){powerBtn.classList.toggle("on",on);powerBtn.textContent=on?"STOP FM":"PLAY FM";powerBtn.setAttribute("aria-pressed",String(on));powerLed.classList.toggle("on",on);playLed.classList.toggle("on",on&&streamReady);signalLed.classList.toggle("on",on&&streamReady&&!audio.paused)}
  function animateRadioMeter(){if(meterAnalyser&&meterData&&streamReady&&!audio.paused){meterAnalyser.getByteFrequencyData(meterData);meterBars.forEach((b,i)=>{const v=meterData[Math.floor(i*meterData.length/meterBars.length)]||0;b.style.height=Math.max(5,Math.round(v/255*100))+"%"});signalLed.classList.toggle("on",meterData.some(v=>v>8))}else{meterBars.forEach(b=>b.style.height="5%");signalLed.classList.remove("on")}meterFrame=requestAnimationFrame(animateRadioMeter)}
  animateRadioMeter();
  function attachRadioMeter(){try{if(!window.ac||ac.state==="closed")return;if(!meterSource){meterSource=ac.createMediaElementSource(audio);meterAnalyser=ac.createAnalyser();meterAnalyser.fftSize=128;meterData=new Uint8Array(meterAnalyser.frequencyBinCount);meterSource.connect(meterAnalyser);meterAnalyser.connect(ac.destination)}}catch(e){/* meter remains idle when browser audio graph is unavailable */}}
@@ -208,7 +208,7 @@
   bridging=false;
   if(processor)processor.onaudioprocess=null;
   if(bot){try{bot.leave()}catch(e){}bot=null}
-  $("radioBridgeBtn").disabled=false;
+  $("radioBridgeBtn").disabled=!window.radioPowered;$("radioBridgeStopBtn").disabled=true;
   say("Radio bridge stopped. PTT has priority; radio playback remains local.");
  }
  window.__sanketRadioPreempt=function(claimPTT){
@@ -233,7 +233,7 @@
   }
  }
  async function bridge(){
-  if(!window.radio||!window.mqtt||!window.Radio) {say("PTT core is not ready.");return}
+  if(!window.radioPowered||!window.radio||!window.mqtt||!window.Radio) {say("Power on Boondock Echo PTT first.");return}
   if(!window.ac||ac.state==="closed"){say("Power on / join PTT first, then enable audio.");return}
   if(!streamReady||audio.paused){await playRadio();say("Wait until the radio is playing, then tap BRIDGE INTO PTT CHANNEL.");return}
   if(bot)stopBridge();
@@ -243,7 +243,7 @@
   say("Requesting the floor on PTT channel "+radio.ch+"…");
   bot.claim(ok=>{
    if(!ok){say("PTT channel is busy. Stop the current transmission and try again.");if(bot){bot.leave();bot=null}return}
-   bridging=true;$("radioBridgeBtn").disabled=true;
+   bridging=true;$("radioBridgeBtn").disabled=true;$("radioBridgeStopBtn").disabled=false;
    say("LIVE BRIDGE · "+st.name+" → PTT channel "+radio.ch+" · RX-only radio source");
   });
  }
@@ -309,9 +309,11 @@
  });
  $("radioScanNow").addEventListener("click",scanAllStations);
  renderStationButtons();setTimeout(scanAllStations,1200);setInterval(()=>{if(!document.hidden)scanAllStations()},300000);
-  powerBtn.addEventListener("click",async()=>{if(streamReady&&!audio.paused){stopBridge();cleanupStream();say("Radio powered off.");return}if(window.ac&&ac.state!=="closed")attachRadioMeter();await playRadio()});
+  powerBtn.addEventListener("click",async()=>{if(streamReady&&!audio.paused){stopBridge();cleanupStream();say("FM playback stopped.");return}if(window.ac&&ac.state!=="closed")attachRadioMeter();await playRadio()});
+ $("radioBridgeStopBtn").disabled=true;$("radioBridgeBtn").disabled=!window.radioPowered;
+ window.addEventListener("boondock:radio-state",e=>{const on=!!(e.detail&&e.detail.powered);if(!on&&bridging)stopBridge();$("radioBridgeBtn").disabled=!on||bridging;$("radioBridgeStopBtn").disabled=!bridging});
  $("radioBridgeBtn").addEventListener("click",bridge);
  $("radioBridgeStopBtn").addEventListener("click",stopBridge);
- select.addEventListener("change",()=>{if(bridging)stopBridge();cleanupStream();refreshTuner();renderStationButtons();say("Selected "+station().name+". Press POWER ON to listen.")});
+ select.addEventListener("change",()=>{if(bridging)stopBridge();cleanupStream();refreshTuner();renderStationButtons();say("Selected "+station().name+". Press PLAY FM to listen.")});
  window.addEventListener("beforeunload",()=>{stopBridge();cleanupStream();cancelAnimationFrame(meterFrame)});
 })();
