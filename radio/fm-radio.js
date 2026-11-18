@@ -247,6 +247,62 @@
    say("LIVE BRIDGE · "+st.name+" → PTT channel "+radio.ch+" · RX-only radio source");
   });
  }
+ window.sanketImportRadioDirectory=async function(sourceUrl){
+  const url=String(sourceUrl||"").trim();
+  if(!/^https:\/\//i.test(url))throw new Error("Please use a public HTTPS directory or playlist URL.");
+  const response=await fetch(url,{mode:"cors",cache:"no-store"});
+  if(!response.ok)throw new Error("Directory returned HTTP "+response.status);
+  const raw=await response.text();
+  let rows=[];
+  try{
+   const data=JSON.parse(raw);
+   rows=Array.isArray(data)?data:(data.stations||data.data||data.items||[]);
+   if(!Array.isArray(rows)&&data&&typeof data==="object")rows=Object.values(data);
+  }catch(e){}
+  if(!rows.length&&/^\s*#EXTM3U/i.test(raw)){
+   if(/#EXT-X-(TARGETDURATION|STREAM-INF|MEDIA-SEQUENCE)/i.test(raw))rows=[{name:new URL(url).hostname+" stream",url:url}];
+   else{
+    let name="";
+    raw.split(/\r?\n/).forEach(line=>{
+     line=line.trim();if(line.startsWith("#EXTINF")){name=(line.split(",").slice(1).join(",")||"Radio stream").trim()}
+     else if(/^https:\/\//i.test(line)){rows.push({name:name||new URL(line).hostname,url:line});name=""}
+    });
+   }
+  }
+  if(!rows.length&&/(\.pls)(?:$|[?#])/i.test(url)){
+   const title=(raw.match(/Title\d+=(.*)/i)||[])[1]||"Imported radio";
+   const stream=(raw.match(/File\d+=(https:\/\/\S+)/i)||[])[1];
+   if(stream)rows=[{name:title,url:stream}];
+  }
+  if(!rows.length){
+   const links=raw.match(/https:\/\/[^\s"'<>]+\.(?:m3u8?|mp3|aac|ogg)(?:\?[^\s"'<>]*)?/gi)||[];
+   rows=links.map((u,i)=>({name:"Imported stream "+(i+1),url:u.replace(/[),;]+$/,"")}));
+  }
+  if(!rows.length&&/\.(?:m3u8?|mp3|aac|ogg)(?:$|[?#])/i.test(url))rows=[{name:new URL(url).hostname+" radio",url:url}];
+  const additions=[];
+  rows.forEach((row,i)=>{
+   const streamUrl=String(row.stream_url||row.url||row.stream||row.src||"").trim();
+   const name=String(row.name||row.station_name||row.title||row.station||("Imported radio "+(i+1))).trim();
+   if(!/^https:\/\//i.test(streamUrl)||!name)return;
+   if(Object.values(stations).some(st=>st.url===streamUrl))return;
+   let id="custom_"+name.toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,"").slice(0,32)+"_"+i;
+   while(stations[id])id+="_x";
+   stations[id]={name:name,url:streamUrl};stationIds.push(id);feedState[id]="checking";additions.push(id);
+  });
+  if(!additions.length)throw new Error("No new HTTPS station streams found. Use a CORS-enabled JSON/M3U directory or a direct stream URL.");
+  renderStationButtons();
+  let cursor=0,good=0,uncertain=0,failed=0;
+  async function worker(){while(cursor<additions.length){const id=additions[cursor++];const state=await probeStation(id,scanGeneration);feedState[id]=state;if(state==="green")good++;else if(state==="yellow")uncertain++;else failed++;renderStationButtons();}}
+  await Promise.all([worker(),worker(),worker()]);
+  return {added:additions.length,working:good,uncertain:uncertain,unavailable:failed};
+ };
+ const importBtn=$("radioDirectoryImportBtn"),importInput=$("radioDirectoryUrl"),importStatus=$("radioDirectoryImportStatus");
+ if(importBtn)importBtn.addEventListener("click",async()=>{
+  importBtn.disabled=true;importStatus.textContent="Reading directory and testing discovered streams…";
+  try{const result=await window.sanketImportRadioDirectory(importInput.value);importStatus.textContent="Import complete · "+result.working+" working · "+result.uncertain+" uncertain · "+result.unavailable+" unavailable. Working stations have been added to the station buttons.";say(importStatus.textContent)}
+  catch(e){importStatus.textContent="Import failed: "+e.message+" · Some websites block browser access (CORS); use a direct JSON/M3U link or stream URL.";say(importStatus.textContent)}
+  finally{importBtn.disabled=false}
+ });
  $("radioScanNow").addEventListener("click",scanAllStations);
  renderStationButtons();setTimeout(scanAllStations,1200);setInterval(()=>{if(!document.hidden)scanAllStations()},300000);
   powerBtn.addEventListener("click",async()=>{if(streamReady&&!audio.paused){stopBridge();cleanupStream();say("Radio powered off.");return}if(window.ac&&ac.state!=="closed")attachRadioMeter();await playRadio()});
