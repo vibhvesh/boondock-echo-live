@@ -63,9 +63,12 @@ const css=[
 "#radioLinesDev{display:none!important;position:fixed!important;z-index:24!important;left:8px!important;right:8px!important;bottom:52px!important;top:auto!important;max-height:65dvh!important;overflow:auto!important;margin:0!important;background:#3e170f!important}",
 "#radioLinesDev.open{display:block!important}#radioLinesDev .radio-scan{max-height:140px;overflow:auto}",
 "#sstvP,#locp,.panel:has(#us),.panel:has(#log),#net{display:none!important}",
+"#sstvP.simple-sstv.open{display:block!important;position:fixed!important;z-index:40!important;left:10px!important;right:10px!important;bottom:54px!important;max-height:65dvh!important;overflow:auto!important;background:#5d1a11!important;color:#fff0e8!important;padding:10px!important;border:1px solid #f0cbbb!important;border-radius:12px!important}",
 "@media(max-height:650px){#ptt{width:min(48vw,190px)!important;height:min(48vw,190px)!important}#simpleMessages{height:43dvh;max-height:43dvh}}"
 ].join("\n");
 const style=document.createElement("style");style.id="simpleRadioStyles";style.textContent=css;document.head.appendChild(style);
+if(sstvFile)sstvFile.addEventListener("change",()=>{if(sstvFile.files&&sstvFile.files.length){sstv.classList.add("open");drawer.classList.remove("open")}});
+$("sstvCancel")?.addEventListener("click",()=>sstv.classList.remove("open"));
 ptt.addEventListener("pointerdown",e=>{if(!window.radio||!radio.name){e.preventDefault();e.stopImmediatePropagation();if(!name.value.trim()){name.focus();return}go.click()}},true);
 ptt.addEventListener("click",e=>{if(!window.radio||!radio.name){e.preventDefault();if(name.value.trim())go.click()}});
 const oldRender=window.render;window.render=function(){if(oldRender)oldRender();if(!window.radio||!radio.name){ptt.textContent="POWER ON";ptt.className="";$("st").textContent="READY TO JOIN"}else if(!holding&&!granted&&!(radio.floor&&radio.floor.id!==radio.id))ptt.textContent="HOLD TO TALK"};
@@ -78,4 +81,5 @@ let fmWasPlaying=false,busy=false;function pauseFm(){if(audio&&!audio.paused){fm
 const oldDown=window.down;if(oldDown)window.down=function(e){pauseFm();return oldDown(e)};
 setInterval(()=>{if(!window.radio)return;const f=radio.floor,active=!!(f&&(f.id!==radio.id||radio.talking));if(active&&!busy)pauseFm();if(!active&&busy&&fmWasPlaying&&audio){fmWasPlaying=false;audio.play().catch(()=>{})}busy=active},180);
 if(auto.checked){if(!name.value)name.value=localStorage.getItem("nm")||"SANKET AUTO";setTimeout(()=>{if(window.radio&&!radio.name&&localStorage.getItem("sanketptt.autoPower")!=="off")go.click()},1600)}
+setInterval(()=>{if(window.radio&&radio.name&&!holding&&!granted&&!(radio.floor&&radio.floor.id!==radio.id))ptt.textContent="HOLD TO TALK"},500);
 })();
