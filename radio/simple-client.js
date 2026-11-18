@@ -47,7 +47,7 @@ fmBtn.onclick=()=>{drawer.classList.remove("open");const open=!fm.classList.cont
 fmClose.onclick=closeFmPanel;
 
 document.querySelector(".panel:has(#us)")?.remove();$("locp")?.remove();const logPanel=$("log")?.closest(".panel");if(logPanel)logPanel.style.display="none";
-const messages=document.createElement("section");messages.id="simpleMessages";messages.innerHTML='<div class="ribbon-head">LAST FIVE AUDIO MESSAGES</div><div id="recentAudioRibbons"><small>Waiting for radio traffic</small></div><div class="transcript-head"><b>MESSAGE TRANSCRIPTS</b><span id="whisperState">WHISPER · AUTO</span></div><div id="simpleTranscriptList"><small>Incoming messages appear here</small></div>';main.after(messages);
+const messages=document.createElement("section");messages.id="simpleMessages";messages.innerHTML='<div class="ribbon-head">LAST FIVE AUDIO MESSAGES</div><div id="recentAudioRibbons"><small>Waiting for radio traffic</small></div><div class="transcript-head"><b>MESSAGE HISTORY · NEWEST AT BOTTOM</b><span id="whisperState">WHISPER · AUTO</span></div><div id="simpleTranscriptList"><small>Your sent and received messages will appear here</small></div><div id="simpleSstvGallery"><div class="transcript-head"><b>SSTV PICTURES</b><span>LOCAL & RECEIVED</span></div></div>';main.after(messages);$("simpleSstvGallery").appendChild($("sstvList"));
 const css=[
 "body{padding:0!important;background:#8f210f!important;overflow:hidden!important;height:100dvh!important}",
 ".rig{width:100%!important;max-width:520px!important;height:100dvh!important;min-height:0!important;overflow:hidden!important;padding:6px 9px!important;display:flex!important;flex-direction:column!important;gap:4px!important;border-radius:0!important}",
@@ -84,6 +84,7 @@ const css=[
 "#sstvP.simple-sstv.open{display:block!important;position:fixed!important;z-index:40!important;left:10px!important;right:10px!important;bottom:54px!important;max-height:65dvh!important;overflow:auto!important;background:#5d1a11!important;color:#fff0e8!important;padding:10px!important;border:1px solid #f0cbbb!important;border-radius:12px!important}",
 "#simpleSstvRow{display:flex;align-items:center;gap:6px;flex:0 0 36px;min-height:36px;padding:3px 5px;border:1px solid #f0cbbb88;border-radius:9px;background:#5d1a11;color:#ffe9df;font:800 9px Arial;letter-spacing:1px}#simpleSstvRow span{flex:1}#simpleSstvRow button{height:28px;min-width:82px;background:#e9c8b8;color:#51170e;border-radius:7px;font:800 10px Arial}#simpleSstvModal{display:none;position:fixed;z-index:60;inset:0;background:#180b09ed;align-items:center;justify-content:center;padding:16px}#simpleSstvModal.open{display:flex}#simpleSstvModal #sstvTx{display:block!important;width:min(94vw,390px);max-height:90dvh;overflow:auto;background:#5d1a11;padding:10px;border:1px solid #f0cbbb;border-radius:12px}#simpleSstvModal canvas{width:100%!important;height:auto!important}.sstv-modal-head{display:flex;justify-content:space-between;align-items:center;color:#ffe9df;font:800 12px Arial;margin-bottom:8px}.sstv-modal-head button{background:#7b291b;color:white;padding:6px 10px}#simpleMoreDrawer{top:72px;bottom:auto;max-height:75dvh;overflow:auto}#simpleMoreDrawer.open{display:block}#simpleRadioTop>div:last-child{display:flex;align-items:center;gap:5px}@media(max-height:720px){#ptt{width:min(25vw,142px)!important;height:min(25vw,142px)!important;min-width:105px!important;min-height:105px!important}#simpleMessages{height:auto;min-height:0}#nm{min-height:28px!important;font-size:14px!important}#main .hint{display:none!important}}",
 ].join("\n");
+const messageGalleryStyle=document.createElement("style");messageGalleryStyle.textContent=`#simpleSstvGallery{flex:0 0 auto;max-height:112px;min-height:0;overflow-y:auto;border-top:1px solid #f0cbbb55;padding-top:4px}#simpleSstvGallery .transcript-head{position:sticky;top:0;background:#5d1a11;z-index:1;padding:2px 0}#simpleSstvGallery #sstvList{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin:3px 0 0;padding:0}#simpleSstvGallery #sstvList li{min-width:0;padding:3px;border:1px solid #f0cbbb55;border-radius:6px;overflow:hidden}#simpleSstvGallery #sstvList canvas,#simpleSstvGallery #sstvList img{width:100%;max-width:none;aspect-ratio:4/3;object-fit:contain}#simpleMessages #simpleTranscriptList{scroll-behavior:smooth;overflow-y:auto;overscroll-behavior:contain}#simpleMessages .transcript-item{scroll-margin-bottom:6px}#simpleMessages .transcript-item.mine{border-left:3px solid #f5c77a;padding-left:7px}#simpleMessages .transcript-item:not(.mine){border-left:3px solid #78c8ad;padding-left:7px}#simpleMessages .audio-ribbon{flex:0 0 92px}`;document.head.appendChild(messageGalleryStyle);
 const style=document.createElement("style");style.id="simpleRadioStyles";style.textContent=css;document.head.appendChild(style);
 const statusButtonStyle=document.createElement("style");statusButtonStyle.textContent=`#radioPower{min-width:106px!important;padding:0 10px!important}#radioPower .power-glyph{display:none!important}.rig:not(.radio-powered) .lcd .meter{display:none!important}.rig.radio-powered .lcd .meter{display:block!important}.led.status-led{appearance:none;-webkit-appearance:none;cursor:default;border:1px solid #f0cbbb55;border-radius:8px;padding:4px 6px;min-width:34px;background:linear-gradient(#38130f,#1e0b09);color:#e9cabc;font:900 9px Arial;display:flex;flex-direction:column;align-items:center;gap:3px;box-shadow:inset 0 1px 2px #ffffff18}.led.status-led i{width:10px;height:10px;border-radius:50%;background:#292929;box-shadow:inset 0 1px 3px #000}.led.status-led.rx.on{color:#c9ffe0;border-color:#45ed8a88}.led.status-led.rx.on i{background:#45ed8a;box-shadow:0 0 10px #45ed8a}.led.status-led.tx.on{color:#ffd1ce;border-color:#ff514b99}.led.status-led.tx.on i{background:#ff514b;box-shadow:0 0 10px #ff514b}.led.status-led:focus{outline:1px solid #ffe0cf}.led.pw i{background:#333!important;box-shadow:inset 0 1px 3px #000!important}.led.pw.on i{background:#ffc247!important;box-shadow:0 0 10px #ffc247!important}#simpleSquelch{display:flex}#simpleRadioTop .simple-top-left{display:flex;align-items:center;gap:8px;min-width:0;flex:1}#radioPower{min-width:64px;height:32px;border-radius:18px;border:1px solid #f8d7c5;background:linear-gradient(#502017,#2a100c);color:#f8dfd3;display:flex;align-items:center;justify-content:center;gap:4px;font:900 9px Arial;box-shadow:inset 0 1px 2px #ffffff30,0 2px 5px #0007}#radioPower .power-glyph{font-size:21px}#radioPower.is-on{background:linear-gradient(#f5c35e,#a95c1a);color:#30140c;box-shadow:0 0 10px #ffb52d88}#ptt:disabled{opacity:.58;filter:saturate(.55)}.lcd .meter{display:none}#simpleRadioTop .leds{display:flex;gap:5px!important;align-items:center}`;document.head.appendChild(statusButtonStyle);
 
@@ -180,9 +181,9 @@ function playMessage(e,button){
 }
 function drawMessages(entries){
  const recent=$("recentAudioRibbons"),list=$("simpleTranscriptList");
- const ordered=entries.slice().sort((a,b)=>b.t0-a.t0),last=ordered.slice(0,5);
+ const ordered=entries.slice().sort((a,b)=>a.t0-b.t0),last=ordered.slice(-5);
  recent.innerHTML=last.length?"":'<small class="empty-ribbon">No recorded messages yet</small>';
- last.forEach(e=>{
+ last.slice().reverse().forEach(e=>{
   const b=document.createElement("button");b.type="button";b.className="audio-ribbon"+(e.mine?" mine":"");
   const who=document.createElement("b");who.textContent=(e.name||"Radio")+(e.mine?" · YOU":"");
   const tm=document.createElement("small");tm.textContent=new Date(e.t0).toLocaleTimeString();
@@ -205,13 +206,14 @@ function drawMessages(entries){
    queue=queue.then(async()=>{
     try{const pipe=await loadWhisper(),r=await pipe(wavFloat(e.wav),{task:"transcribe",chunk_length_s:30,stride_length_s:5});texts.set(e.key,(r.text||"").trim()||"No speech detected")}
     catch(err){texts.set(e.key,"Whisper unavailable: "+err.message)}
-    drawMessages(window.rec?rec.entries:[]);
+    drawMessages(rec.entries||[]);
    });
   }
  });
+ requestAnimationFrame(()=>{list.scrollTop=list.scrollHeight;messages.scrollTop=messages.scrollHeight});
 }
 
-if(window.rec){rec.onChange=entries=>{renderLog(entries);drawMessages(entries)};drawMessages(rec.entries||[])}
+rec.onChange=entries=>{renderLog(entries);drawMessages(entries)};drawMessages(rec.entries||[]);
 let fmWasPlaying=false,busy=false;function pauseFm(){if(audio&&!audio.paused){fmWasPlaying=true;audio.pause()}}
 const oldDown=window.down;if(oldDown)window.down=function(e){pauseFm();return oldDown(e)};
 setInterval(()=>{if(!window.radio)return;const f=radio.floor,active=!!(f&&(f.id!==radio.id||radio.talking));if(active&&!busy)pauseFm();if(!active&&busy&&fmWasPlaying&&audio){fmWasPlaying=false;audio.play().catch(()=>{})}busy=active},180);
