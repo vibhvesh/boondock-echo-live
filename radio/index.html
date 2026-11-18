@@ -303,7 +303,7 @@ go.onclick=async function(){
  try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}})}
  catch(e){stream=null;throw e}
  ac=new (window.AudioContext||window.webkitAudioContext)();try{unlockAudio()}catch(e){}
- startLoc();login.style.display='none';main.style.display='block';hd.textContent='#'+radio.ch+' — '+me;radio.join(me);render();
+ try{startLoc()}catch(locError){console.warn("Location startup skipped",locError)}login.style.display='none';main.style.display='block';hd.textContent='#'+radio.ch+' — '+me;radio.join(me);render();
  if(stream){var src=ac.createMediaStreamSource(stream);proc=ac.createScriptProcessor(4096,1,1);var mute=ac.createGain();mute.gain.value=0;src.connect(proc);proc.connect(mute);mute.connect(ac.destination);
   proc.onaudioprocess=function(e){if(!granted||sstvTx)return;var i=e.inputBuffer.getChannelData(0),r=ac.sampleRate/RATE,n=Math.floor(i.length/r),o=new Int16Array(n);
    for(var k=0;k<n;k++)o[k]=Math.max(-1,Math.min(1,i[Math.floor(k*r)]))*32767;if(radio.sendAudio(o)){txLvl=Math.max(txLvl,lvl(o));rec.feed(radio.id,radio.name,o,true,undefined,radio.loc)}}}
