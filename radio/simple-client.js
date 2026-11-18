@@ -19,8 +19,11 @@ channels.forEach(([v,n])=>$("simpleChannel").add(new Option(n,v)));$("simpleChan
 $("simpleChannel").onchange=()=>{const u=new URL(location.href);u.searchParams.set("ch",$("simpleChannel").value);location.href=u.href};
 const auto=$("simpleAutoPower");auto.checked=localStorage.getItem("sanketptt.autoPower")!=="off";auto.onchange=()=>localStorage.setItem("sanketptt.autoPower",auto.checked?"on":"off");
 more.onclick=()=>{drawer.classList.toggle("open");$("radioLinesDev").classList.remove("open")};$("moreClose").onclick=()=>drawer.classList.remove("open");
-$("simpleSstv").onclick=()=>{drawer.classList.remove("open");$("sstvFile").click()};
-const sstv=$("sstvP"),sstvBtn=$("sstvBtn"),sstvFile=$("sstvFile");
+const sstvPick=document.createElement("div");sstvPick.id="sstvPick";sstvPick.innerHTML='<b>SSTV IMAGE</b><button id="sstvBrowse">BROWSE</button><button id="sstvTake">CAMERA</button>';drawer.appendChild(sstvPick);
+$("sstvBrowse").onclick=()=>{drawer.classList.remove("open");$("sstvFile").removeAttribute("capture");$("sstvFile").click()};
+$("sstvTake").onclick=()=>{drawer.classList.remove("open");$("sstvFile").setAttribute("capture","environment");$("sstvFile").click()};
+$("simpleSstv").onclick=()=>{sstvPick.classList.toggle("open")};
+const sstv=$("sstvP"),sstvBtn=$("sstvBtn"),sstvFile=$("sstvFile");if(sstvFile)document.body.appendChild(sstvFile);
 if(sstv){sstv.querySelector("h3").textContent="SSTV IMAGE";sstv.querySelector("label")?.remove();sstvBtn.textContent="BROWSE IMAGE";sstvBtn.onclick=()=>{sstvFile.removeAttribute("capture");sstvFile.click()};const cam=document.createElement("button");cam.textContent="CAMERA";cam.id="sstvCamera";sstvBtn.after(cam);cam.onclick=()=>{sstvFile.setAttribute("capture","environment");sstvFile.click()}}
 const fm=$("radioLinesDev"),audio=$("radioLineAudio");fm.classList.remove("open");
 const fmBtn=document.createElement("button");fmBtn.id="simpleFM";fmBtn.textContent="FM RADIO";rig.appendChild(fmBtn);
@@ -54,6 +57,7 @@ const css=[
 "#simpleMore{left:10px}#simpleFM{right:10px}",
 "#simpleMoreDrawer{display:none;position:fixed;z-index:30;left:10px;bottom:52px;width:min(270px,calc(100vw - 20px));padding:12px;background:#58180f;border:1px solid #f0cbbb;border-radius:12px;box-shadow:0 10px 28px #0009;color:#ffeadf}",
 "#simpleMoreDrawer.open{display:block}.more-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font:800 11px Arial}",
+"#sstvPick{display:none;margin-top:8px;gap:6px}#sstvPick.open{display:grid;grid-template-columns:1fr 1fr}#sstvPick b{grid-column:1/-1;font:800 10px Arial;color:#f5d5c8}#sstvPick button{padding:9px;background:#e9c8b8;color:#51170e;font:800 11px Arial}",
 "#simpleMoreDrawer label{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:9px 0;font:11px Arial}#simpleMoreDrawer select{max-width:145px;min-height:34px!important;font-size:11px!important}",
 "#simpleMoreDrawer input{width:18px;height:18px}#simpleSstv{width:100%;padding:9px;background:#e9c8b8;color:#51170e;font:800 11px Arial}",
 "#radioLinesDev{display:none!important;position:fixed!important;z-index:24!important;left:8px!important;right:8px!important;bottom:52px!important;top:auto!important;max-height:65dvh!important;overflow:auto!important;margin:0!important;background:#3e170f!important}",
