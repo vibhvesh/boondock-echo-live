@@ -26,7 +26,7 @@ const pttHint=ptt.nextElementSibling&&ptt.nextElementSibling.classList.contains(
 pttDock.appendChild(ptt);if(pttHint)pttDock.appendChild(pttHint);
 const topRight=top.querySelector("div:last-child");topRight.classList.add("simple-top-right");const lcd=document.querySelector(".lcd");lcd.after(pttDock);
 
-login.style.display="none";go.style.display="none";main.style.display="block";main.insertBefore(name,main.firstChild);pttDock.before(name);name.placeholder="Call sign";name.setAttribute("aria-label","Call sign");$("hd").style.display="none";
+login.style.display="none";go.style.display="none";main.style.display="none";lcd.after(name);name.after(pttDock);name.placeholder="Call sign";name.setAttribute("aria-label","Call sign");$("hd").style.display="none";
 const more=document.createElement("button");more.id="simpleMore";more.textContent="⋮";more.setAttribute("aria-label","More radio controls");top.querySelector("div:last-child").appendChild(more);const drawer=document.createElement("div");drawer.id="simpleMoreDrawer";drawer.innerHTML='<div class="more-head"><b>RADIO OPTIONS</b><button id="moreClose">×</button></div><label>CHANNEL<select id="simpleChannel"></select></label><label class="auto-row">AUTO POWER ON <input id="simpleAutoPower" type="checkbox"></label><small>FM pauses automatically during PTT.</small>';
 rig.append(drawer);
 const skinLabel=document.createElement("label");skinLabel.textContent="RADIO SKIN";skinLabel.appendChild($("simpleSkin"));drawer.appendChild(skinLabel);
@@ -126,10 +126,16 @@ function stopMic(){
  granted=false;holding=false;sstvTx=false;
 }
 async function powerOnRadio(){if(!window.BoondockRadio||typeof window.BoondockRadio.powerOn!=="function")throw new Error("RADIO_CORE_NOT_READY");return await window.BoondockRadio.powerOn()}
-powerBtn.addEventListener("click",async()=>{
+powerBtn.addEventListener("click",async(e)=>{
+ e.preventDefault();e.stopPropagation();
  if(powerBtn.disabled)return;
  if(!radioPowered){
-  powerBtn.disabled=true;powerText.textContent="STARTING";
+  if(!name.value.trim()){
+   $("st").textContent="ENTER CALL SIGN BELOW";
+   name.focus();
+   return;
+  }
+  powerBtn.disabled=true;powerText.textContent="STARTING";$("st").textContent="REQUESTING MICROPHONE…";
   try{
    const joined=await powerOnRadio();
    if(!joined)throw new Error("RADIO_JOIN_NOT_CONFIRMED");
@@ -137,13 +143,22 @@ powerBtn.addEventListener("click",async()=>{
   }catch(e){
    stopMic();setRadioPower(false);
    const msg=e&&e.message?e.message:(e&&e.name?e.name:String(e));
-   $("st").textContent=msg==="NotAllowedError"||msg==="PermissionDeniedError"?"MIC PERMISSION DENIED":msg==="NotFoundError"?"NO MICROPHONE FOUND":"POWER ON FAILED";
+   const messages={
+    ENTER_CALL_SIGN:"ENTER CALL SIGN BELOW",
+    MICROPHONE_API_UNAVAILABLE:"MICROPHONE NOT AVAILABLE IN THIS BROWSER",
+    HTTPS_REQUIRED_FOR_MICROPHONE:"OPEN THE HTTPS SITE",
+    NotAllowedError:"MIC PERMISSION BLOCKED · ALLOW MICROPHONE",
+    PermissionDeniedError:"MIC PERMISSION BLOCKED · ALLOW MICROPHONE",
+    NotFoundError:"NO MICROPHONE FOUND",
+    NotReadableError:"MICROPHONE IS BUSY · CLOSE OTHER APPS",
+    RADIO_JOIN_NOT_CONFIRMED:"RADIO DID NOT JOIN"
+   };
+   $("st").textContent=messages[msg]||("POWER ON FAILED · "+msg.slice(0,34));
    console.error("Boondock radio power-on failed:",e);
-   alert("Boondock Echo could not power on: "+msg+". Check microphone permission for this site and try again.");
-  }finally{powerBtn.disabled=false}
+  }finally{powerBtn.disabled=false;powerText.textContent=radioPowered?"POWER OFF":"POWER ON"}
  }else{
-  if(window.BoondockRadio)window.BoondockRadio.powerOff();
-  setRadioPower(false);
+  try{if(window.BoondockRadio)window.BoondockRadio.powerOff();setRadioPower(false)}
+  catch(err){$("st").textContent="POWER OFF FAILED";console.error(err)}
  }
 });
 // PTT is transmit-only. When the radio is off it displays POWER ON FIRST.
@@ -304,6 +319,17 @@ body{font-family:Arial,Helvetica,sans-serif!important}
 }
 `;
 document.head.appendChild(approvedFaceplate);
+
+
+/* Keep call-sign and PTT as separate, visible faceplate rows; preserve a tappable power switch. */
+const powerFixStyle=document.createElement("style");
+powerFixStyle.textContent=`
+#simpleRadioTop,#simpleRadioTop *{pointer-events:auto!important}
+#radioPower{position:relative!important;z-index:80!important;pointer-events:auto!important;touch-action:manipulation!important;cursor:pointer!important}
+#nm{position:relative!important;z-index:5!important;order:2!important;display:block!important;flex:0 0 48px!important;width:min(100%,390px)!important;height:48px!important;min-height:48px!important;margin:0 auto!important}
+#simplePttDock{order:3!important;position:relative!important;z-index:4!important}
+`;
+document.head.appendChild(powerFixStyle);
 
 if(typeof window.render==="function")window.render();
 setInterval(()=>{const powered=!!(window.radio&&radio.name);if(powerBtn&&!powerBtn.disabled&&radioPowered&&!powered)setRadioPower(false);if(!radioPowered&&ptt.textContent!=="POWER ON FIRST")ptt.textContent="POWER ON FIRST";if(powered&&radioPowered&&!holding&&!granted&&!(radio.floor&&radio.floor.id!==radio.id))ptt.textContent="HOLD TO TALK"},500);
